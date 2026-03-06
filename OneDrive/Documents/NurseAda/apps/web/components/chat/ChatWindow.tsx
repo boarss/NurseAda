@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState } from "react";
 import type { ChatMessage } from "@nurseada/shared-ts/types";
@@ -26,7 +26,7 @@ export function ChatWindow() {
       setMessages([...nextMessages, res.message]);
       setEmergency(res.safety.emergency);
     } catch (e) {
-      setError("I couldn’t reach the NurseAda service. Please try again in a moment.");
+      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
       setLoading(false);
       return;
     }
@@ -59,7 +59,25 @@ export function ChatWindow() {
             </div>
           </div>
         ))}
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-2xl bg-slate-800 px-3 py-2 text-xs text-slate-400" aria-busy="true">
+              NurseAda is thinking...
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-red-300">{error}</p>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="w-fit rounded-full border border-slate-600 bg-slate-800 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-700"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
       </div>
       <form
         className="flex gap-2"

@@ -18,6 +18,17 @@ async def call_cdss_triage(text: str, *, trace_id: str) -> dict[str, Any] | None
         return None
 
 
+async def call_cdss_interactions(drug_names: list[str], *, trace_id: str) -> dict[str, object] | None:
+    url = f"{settings.cdss_url.rstrip('/')}/interactions"
+    try:
+        async with httpx.AsyncClient(timeout=settings.request_timeout_s) as client:
+            r = await client.post(url, json={"drugNames": drug_names})
+            r.raise_for_status()
+            return r.json()
+    except Exception:
+        return None
+
+
 async def call_llm_generate(
     *,
     messages: list[dict[str, str]],
