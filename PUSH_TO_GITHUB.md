@@ -15,23 +15,20 @@
 
 ---
 
-## 2. Set the correct remote and push
+## 2. Push from this folder
 
-Open a terminal in this folder (`NurseAda 2`) and run:
+This project has its own git repo and an initial commit. **Create the repo on GitHub first** (step 1), then open a terminal **in this folder** (`NurseAda 2`) and run:
 
 ```powershell
-# If your GitHub username is NOT "boarss", set it here:
-$GITHUB_USER = "boarss"   # <-- Change to your GitHub username
+cd "c:\Users\Daug-PA\OneDrive\Documents\NurseAda 2"
 
-# Set the remote to your new repo (use the URL GitHub shows after creating the repo)
-git remote remove origin 2>$null
-git remote add origin "https://github.com/$GITHUB_USER/NurseAda.git"
+# If your GitHub username is NOT "boarss", update the remote:
+# git remote set-url origin https://github.com/YOUR_USERNAME/NurseAda.git
 
-# Push (use "main" if your branch is main, or "master" if that's what you have)
 git push -u origin master
 ```
 
-If GitHub shows you a different URL (e.g. with your username), use that exact URL in `git remote add origin ...`.
+If your default branch is `main` instead of `master`, use: `git push -u origin main` (and optionally `git branch -M main` first).
 
 ---
 
