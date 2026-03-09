@@ -16,6 +16,7 @@ services:
       - PHARMACY_API_URL=
       - LAB_API_URL=
       - EMERGENCY_API_URL=
+      - GATEWAY_XAI_URL=http://xai:8012
 
   fhir-adapter:
     build:
@@ -46,6 +47,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8003:8003"
+
+  xai:
+    build:
+      context: ./services/xai
+      dockerfile: Dockerfile
+    ports:
+      - "8012:8012"
 
   ussd:
     build:

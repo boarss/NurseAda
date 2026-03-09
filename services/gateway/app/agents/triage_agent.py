@@ -1,10 +1,42 @@
 """
 Triage agent: symptom assessment and differential diagnosis via CDSS (and FHIR/EHR context).
+Uses fallback triage when CDSS is not configured. Enriches with herbal/natural remedy options.
 """
 import httpx
 from app.agents.base import BaseAgent, AgentResult
-from app.config import GATEWAY_CDSS_URL, GATEWAY_FHIR_URL
+from app.config import GATEWAY_CDSS_URL, GATEWAY_FHIR_URL, GATEWAY_KNOWLEDGE_URL
 from app.services.verification import get_standard_disclaimer
+from app.services.fallback_triage import run_fallback_triage
+from app.services.discourse import format_triage_response, HERBAL_HEADER
+
+
+async def _append_herbal_if_available(
+    content: str, query: str, base_sources: list[str], severity: str = "low"
+) -> tuple[str, list[str]]:
+    """Append herbal/natural remedy options for non-emergency triage when knowledge is configured."""
+    if severity in ("emergency", "high") or not GATEWAY_KNOWLEDGE_URL:
+        return content, base_sources
+    try:
+        async with httpx.AsyncClient() as client:
+            r = await client.post(
+                f"{GATEWAY_KNOWLEDGE_URL.rstrip('/')}/retrieve/herbal",
+                json={"query": query, "top_k": 2},
+                timeout=6.0,
+            )
+            if r.status_code != 200:
+                return content, base_sources
+            data = r.json()
+            chunks = data.get("chunks", [])
+            if not chunks:
+                return content, base_sources
+            lines = [content, f"\n{HERBAL_HEADER}"]
+            for c in chunks:
+                t = c.get("text", "")
+                if t:
+                    lines.append(f"• {t}")
+            return "\n".join(lines), base_sources + ["Knowledge – Herbal"]
+    except Exception:
+        return content, base_sources
 
 
 class TriageAgent(BaseAgent):
@@ -37,13 +69,22 @@ class TriageAgent(BaseAgent):
                         observations_note = " [EHR context available]"
             except Exception:
                 pass
-        # Call CDSS triage
+        # Call CDSS triage, or use fallback when CDSS not configured
         if not GATEWAY_CDSS_URL:
+            result = run_fallback_triage(user_message)
+            content = format_triage_response(
+                severity=result.severity,
+                confidence=result.confidence,
+                reasoning=result.reasoning,
+                suggestions=result.suggestions,
+                inferred_codes=result.inferred_codes,
+            )
+            content, sources = await _append_herbal_if_available(content, user_message, ["Fallback triage"], result.severity)
             return AgentResult(
-                content="Symptom triage is not configured. Please describe your symptoms and I'll give general guidance. This is not a substitute for professional medical advice; consult a healthcare provider."
-                + get_standard_disclaimer(),
+                content=content + get_standard_disclaimer(),
                 agent_id=self.agent_id,
-                sources=[],
+                sources=sources,
+                metadata={"severity": result.severity, "suggestions": result.suggestions},
             )
 
         try:
@@ -55,7 +96,7 @@ class TriageAgent(BaseAgent):
                 )
                 if r.status_code != 200:
                     return AgentResult(
-                        content="I couldn't complete the triage check right now. Please try again or seek in-person care."
+                        content="I wasn't able to complete the assessment right now. Please try again, or seek in-person care if needed."
                         + get_standard_disclaimer(),
                         agent_id=self.agent_id,
                     )
@@ -65,28 +106,24 @@ class TriageAgent(BaseAgent):
                 confidence = data.get("confidence")
                 reasoning = data.get("reasoning", "")
                 inferred_codes = data.get("inferred_codes", [])
-                lines = [f"Based on your description, severity assessment: **{severity}**."]
-                if confidence is not None:
-                    lines.append(f"Confidence: {int(confidence * 100)}%.")
-                if reasoning:
-                    lines.append(f"My assessment: {reasoning}")
-                if suggestions:
-                    lines.append("Recommendations:")
-                    for s in suggestions:
-                        lines.append(f"• {s}")
-                if inferred_codes:
-                    lines.append("(Codes used for this assessment: " + ", ".join(c.get("display", c.get("code", "")) for c in inferred_codes[:5]) + ".)")
-                lines.append(observations_note.strip() or "")
-                content = "\n".join(filter(None, lines)) + get_standard_disclaimer()
+                content = format_triage_response(
+                    severity=severity,
+                    confidence=confidence,
+                    reasoning=reasoning,
+                    suggestions=suggestions,
+                    inferred_codes=inferred_codes,
+                    observations_note=observations_note.strip(),
+                )
+                content, sources = await _append_herbal_if_available(content, user_message, ["CDSS"], severity)
                 return AgentResult(
-                    content=content,
+                    content=content + get_standard_disclaimer(),
                     agent_id=self.agent_id,
-                    sources=["CDSS"],
+                    sources=sources,
                     metadata=data,
                 )
         except Exception as e:
             return AgentResult(
-                content="Symptom check is temporarily unavailable. For urgent concerns, please seek care in person or call emergency services."
+                content="The symptom check is temporarily unavailable. For urgent concerns, please seek care in person or call emergency services."
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
             )

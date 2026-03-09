@@ -15,7 +15,7 @@ class CodeCheckResult:
 
 # Minimum symptom keywords for triage to pass code check (so we're not guessing blindly)
 TRIAGE_MIN_TERMS = re.compile(
-    r"\b(pain|fever|cough|headache|symptom|sick|hurt|ache|bleed|breath|vomit|dizzy|tired|rash|swell|diarrhea|chest|stomach|throat|nose)\b",
+    r"\b(pain|fever|cough|headache|symptom|sick|hurt|ache|bleed|breath|vomit|dizzy|tired|rash|swell|diarrhea|chest|stomach|throat|nose|unwell|well|feel|nausea|weak|fatigue|ketone|ketones|dka|diabetes|blood sugar)\b",
     re.I,
 )
 
@@ -32,14 +32,14 @@ def check_codes_triage(query: str) -> CodeCheckResult:
     if not text or len(text) < 3:
         return CodeCheckResult(
             ok=False,
-            reason="Please describe your symptoms in a few words (e.g. headache, fever, cough).",
+            reason="I'd like to help. Could you describe your symptoms in a few words? For example: headache, fever, or cough.",
             resolved_codes=[],
             agent_id="triage",
         )
     if not TRIAGE_MIN_TERMS.search(text):
         return CodeCheckResult(
             ok=False,
-            reason="I couldn't match your message to symptom terms. Please mention specific symptoms (e.g. fever, headache, pain) so I can give you a proper triage recommendation.",
+            reason="I'd like to give you a proper recommendation. Could you mention specific symptoms—for example, fever, headache, or pain?",
             resolved_codes=[],
             agent_id="triage",
         )
@@ -54,14 +54,14 @@ def check_codes_medication(query: str) -> CodeCheckResult:
     if not text or len(text) < 2:
         return CodeCheckResult(
             ok=False,
-            reason="Please mention the medication or drug name(s) you're asking about.",
+            reason="I'd be happy to help with medication questions. Could you mention the drug name(s) you're asking about?",
             resolved_codes=[],
             agent_id="medication",
         )
     if not MEDICATION_MIN_TERMS.search(text):
         return CodeCheckResult(
             ok=False,
-            reason="I couldn't match your message to medication terms. Please mention drug names (e.g. aspirin, paracetamol) or ask about interactions or dosage.",
+            reason="To help with medication questions, I need the drug names. For example: aspirin, paracetamol. You can also ask about interactions or dosage.",
             resolved_codes=[],
             agent_id="medication",
         )

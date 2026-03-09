@@ -1,0 +1,36 @@
+---
+description: Service-to-service calls and API contracts for NurseAda
+globs: services/gateway/**/*.py, services/cdss/**/*.py, services/knowledge/**/*.py
+alwaysApply: false
+---
+
+# NurseAda Integration Consistency
+
+## Gateway → Backend Calls
+
+- Use `httpx.AsyncClient()` with timeout (8–15s).
+- Check `if not GATEWAY_*_URL` before calling; provide fallback when unset.
+- On network error: allow through or return helpful message—never block users.
+- Always `.rstrip('/')` on base URL before appending path.
+
+## API Contracts
+
+| Service | Endpoint | Request | Response |
+|---------|----------|---------|----------|
+| CDSS | POST /triage | `{query, context}` | `{severity, suggestions, inferred_codes, confidence, reasoning}` |
+| CDSS | POST /code-check | `{agent_id, query, context}` | `{ok, reason, resolved_codes, agent_id}` |
+| CDSS | POST /drug-interactions | `{query, patient_id?}` | `{interactions, warnings, codes_checked}` |
+| Knowledge | POST /retrieve | `{query, top_k}` | `{chunks: [{text, source}], sources}` |
+| XAI | POST /visualize/saliency | `{image_url?, features?}` | `{type, ...}` (saliency_radiology or saliency_tabular) |
+| Knowledge | POST /retrieve/herbal | `{query, top_k}` | `{chunks: [{text, source, condition}], sources}` |
+
+## Patient Data
+
+- Gateway GET `/patient/{id}` proxies to FHIR `GET /Patient/{id}`.
+- Chat request accepts `patient_id`; passed to agent context.
+
+## New Integrations
+
+- Add URL to `config.py` and `.env.example`.
+- Implement fallback when service unavailable.
+- Document request/response in this rule or service README.

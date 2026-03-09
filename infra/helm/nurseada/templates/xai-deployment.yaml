@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nurseada-xai
+  labels:
+    app: nurseada-xai
+spec:
+  replicas: {{ .Values.xai.replicaCount }}
+  selector:
+    matchLabels:
+      app: nurseada-xai
+  template:
+    metadata:
+      labels:
+        app: nurseada-xai
+    spec:
+      containers:
+        - name: xai
+          image: "{{ .Values.image.registry }}{{ .Values.xai.image.repository }}:{{ .Values.xai.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8012
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8012
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8012
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources: {{- toYaml .Values.xai.resources | nindent 12 }}
+

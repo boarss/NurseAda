@@ -9,16 +9,20 @@ from app.agents.medication_agent import MedicationAgent
 from app.agents.lab_agent import LabAgent
 from app.agents.emergency_agent import EmergencyAgent
 from app.agents.general_agent import GeneralAgent
+from app.agents.explain_agent import ExplainAgent
+from app.agents.imaging_agent import ImagingAgent
+from app.agents.herbal_agent import HerbalAgent
 from app.services.verification import (
     verify_agent_input,
     verify_agent_output,
     get_standard_disclaimer,
 )
+from app.services.discourse import COULD_NOT_PROCESS, COULD_NOT_MATCH, SOMETHING_WENT_WRONG
 from app.services.code_checker import check_codes_before_agent
 
 # Keyword patterns for intent (run in order; first match wins for primary agent)
 EMERGENCY_PATTERNS = re.compile(
-    r"\b(chest pain|can't breathe|unconscious|stroke|severe bleed|overdose|suicide|emergency|urgent|911|112)\b",
+    r"\b(dka|diabetic ketoacidosis|ketoacidosis|fruity breath|kussmaul|high ketones?|large ketones?|chest pain|can't breathe|unconscious|stroke|severe bleed|overdose|suicide|emergency|urgent|911|112)\b",
     re.I,
 )
 MEDICATION_PATTERNS = re.compile(
@@ -30,28 +34,50 @@ LAB_PATTERNS = re.compile(
     re.I,
 )
 TRIAGE_PATTERNS = re.compile(
-    r"\b(symptom|pain|fever|cough|headache|feel sick|diagnosis|what's wrong|triage)\b",
+    r"\b(symptom|pain|fever|cough|headache|feel sick|diagnosis|what's wrong|triage|unwell|don't feel well|feel bad|help me|nausea|vomit|dizzy|tired|rash|swell|stomach|throat|ache|hurt|bleed|breath|ketone|ketones|dka|diabetes|blood sugar)\b",
+    re.I,
+)
+EXPLAIN_PATTERNS = re.compile(
+    r"\b(why|explain|how did you decide|show reasoning|what caused that|interpretability|xai)\b",
+    re.I,
+)
+IMAGING_PATTERNS = re.compile(
+    r"\b(xray|x-ray|ct scan|mri|radiology|imaging|scan|analyze.*image|image.*analysis)\b",
+    re.I,
+)
+HERBAL_PATTERNS = re.compile(
+    r"\b(herbal|natural remedy|traditional|bitter leaf|ginger|moringa|turmeric|herb)\b",
     re.I,
 )
 
 AGENTS: dict[str, BaseAgent] = {
     "emergency": EmergencyAgent(),
+    "explain": ExplainAgent(),
     "triage": TriageAgent(),
     "medication": MedicationAgent(),
     "lab": LabAgent(),
+    "imaging": ImagingAgent(),
+    "herbal": HerbalAgent(),
     "general": GeneralAgent(),
 }
 
 
-def _detect_intent(user_message: str) -> str:
+def _detect_intent(user_message: str, context: dict | None = None) -> str:
     """Determine which agent should handle this message. Returns agent_id."""
     text = (user_message or "").strip().lower()
+    has_image = bool((context or {}).get("image_base64"))
     if EMERGENCY_PATTERNS.search(text):
         return "emergency"
+    if EXPLAIN_PATTERNS.search(text):
+        return "explain"
     if MEDICATION_PATTERNS.search(text):
         return "medication"
     if LAB_PATTERNS.search(text):
         return "lab"
+    if IMAGING_PATTERNS.search(text) or has_image:
+        return "imaging"
+    if HERBAL_PATTERNS.search(text):
+        return "herbal"
     if TRIAGE_PATTERNS.search(text):
         return "triage"
     return "general"
@@ -77,21 +103,17 @@ class AgentOrchestrator:
         context = context or {}
 
         # 1) Input verification (must pass before any agent is called)
-        intent = _detect_intent(user_message)
+        intent = _detect_intent(user_message, context)
         agent = self.agents.get(intent) or self.agents["general"]
         input_verification = verify_agent_input(user_message, agent.agent_id)
         if not input_verification.ok:
-            return (
-                "I couldn't process that request. Please rephrase or shorten your message. "
-                "For emergencies, please call 112 or go to the nearest hospital."
-            )
+            return COULD_NOT_PROCESS + get_standard_disclaimer()
 
         # 2) Code check: for triage and medication, verify codes before calling the agent
         code_check = await check_codes_before_agent(agent.agent_id, user_message, context)
         if not code_check.ok:
             return (
-                code_check.reason.strip()
-                or "I couldn't match your message to our clinical codes. Please rephrase (e.g. specific symptoms or medication names) so I can give you a proper recommendation."
+                code_check.reason.strip() or COULD_NOT_MATCH
             ) + get_standard_disclaimer()
         if code_check.resolved_codes:
             context = {**context, "resolved_codes": code_check.resolved_codes}
@@ -100,11 +122,7 @@ class AgentOrchestrator:
         try:
             result = await agent.execute(user_message, context=context)
         except Exception as e:
-            return (
-                "Something went wrong on our side. Please try again. "
-                "For urgent health issues, seek care in person or call emergency services."
-                + get_standard_disclaimer()
-            )
+            return SOMETHING_WENT_WRONG + get_standard_disclaimer()
 
         # 4) Output verification (must pass before showing to user)
         content = (result.content or "").strip()
@@ -114,15 +132,14 @@ class AgentOrchestrator:
             require_clinical_disclaimer=True,
         )
         if not output_verification.ok:
-            # Fallback: return safe message instead of unverified content
             return (
-                "I'm sorry, I couldn't provide a verified response for that. "
-                "Please consult a healthcare provider or try rephrasing."
+                "I wasn't able to provide a verified response for that. "
+                "Please consult a healthcare provider or try rephrasing your question."
                 + get_standard_disclaimer()
             )
 
         # 5) Ensure disclaimer for clinical agents
-        if agent.agent_id in ("triage", "medication", "lab", "emergency"):
+        if agent.agent_id in ("triage", "medication", "lab", "emergency", "explain", "imaging", "herbal"):
             if not any(
                 sub in content.lower()
                 for sub in ("not a substitute", "consult", "emergency", "seek")

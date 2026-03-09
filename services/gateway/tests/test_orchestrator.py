@@ -26,6 +26,12 @@ def test_detect_intent_triage():
     assert _detect_intent("symptom check") == "triage"
 
 
+def test_detect_intent_explain():
+    assert _detect_intent("why did you say that?") == "explain"
+    assert _detect_intent("explain your recommendation") == "explain"
+    assert _detect_intent("how did you decide?") == "explain"
+
+
 def test_detect_intent_general():
     assert _detect_intent("what is NurseAda?") == "general"
     assert _detect_intent("hello") == "general"

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nurseada-fhir-adapter
+  labels:
+    app: nurseada-fhir-adapter
+spec:
+  replicas: {{ .Values.fhirAdapter.replicaCount }}
+  selector:
+    matchLabels:
+      app: nurseada-fhir-adapter
+  template:
+    metadata:
+      labels:
+        app: nurseada-fhir-adapter
+    spec:
+      containers:
+        - name: fhir-adapter
+          image: "{{ .Values.image.registry }}{{ .Values.fhirAdapter.image.repository }}:{{ .Values.fhirAdapter.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8011
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8011
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8011
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources: {{- toYaml .Values.fhirAdapter.resources | nindent 12 }}
+

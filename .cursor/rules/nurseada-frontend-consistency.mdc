@@ -1,0 +1,29 @@
+---
+description: NurseAda chat and health UI consistency
+globs: apps/web/**/*.tsx, apps/web/**/*.ts, apps/mobile/**/*.tsx
+alwaysApply: false
+---
+
+# NurseAda Frontend Consistency
+
+## Chat UX
+
+- Suggested prompts on empty state (symptoms, medications, DKA/ketone, imaging, herbal remedies).
+- Patient ID input (optional) for EHR context.
+- Image attach button for medical imaging analysis.
+- Loading indicator while waiting for response.
+- Render **bold** and bullet lists in assistant messages.
+- Disclaimer visually separated (muted text, border-top).
+- Error messages actionable (e.g. "Gateway not found. Ensure the gateway is running.").
+- Placeholder: "Describe your symptoms or ask a health question..."
+
+## API
+
+- Call `POST {GATEWAY_URL}/chat` with `{ messages: [{ role, content }] }`.
+- Use `NEXT_PUBLIC_GATEWAY_URL` / `EXPO_PUBLIC_GATEWAY_URL` from env.
+
+## Accessibility
+
+- `role="alert"` for errors.
+- `aria-label` for icon-only controls.
+- Focus states on buttons and inputs.

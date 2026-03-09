@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nurseada-llm-gateway
+  labels:
+    app: nurseada-llm-gateway
+spec:
+  replicas: {{ .Values.llmGateway.replicaCount }}
+  selector:
+    matchLabels:
+      app: nurseada-llm-gateway
+  template:
+    metadata:
+      labels:
+        app: nurseada-llm-gateway
+    spec:
+      containers:
+        - name: llm-gateway
+          image: "{{ .Values.image.registry }}{{ .Values.llmGateway.image.repository }}:{{ .Values.llmGateway.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8001
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources: {{- toYaml .Values.llmGateway.resources | nindent 12 }}
+

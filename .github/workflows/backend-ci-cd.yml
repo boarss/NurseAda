@@ -1,0 +1,85 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push images
+        run: |
+          set -e
+          REG_PREFIX="${REGISTRY}/${{ github.repository }}/nurseada"
+          docker build -t "${REG_PREFIX}-gateway:${IMAGE_TAG}" services/gateway
+          docker build -t "${REG_PREFIX}-cdss:${IMAGE_TAG}" services/cdss
+          docker build -t "${REG_PREFIX}-knowledge:${IMAGE_TAG}" services/knowledge
+          docker build -t "${REG_PREFIX}-xai:${IMAGE_TAG}" services/xai
+          docker build -t "${REG_PREFIX}-llm-gateway:${IMAGE_TAG}" services/llm-gateway
+          docker build -t "${REG_PREFIX}-fhir-adapter:${IMAGE_TAG}" services/fhir-adapter
+
+          docker push "${REG_PREFIX}-gateway:${IMAGE_TAG}"
+          docker push "${REG_PREFIX}-cdss:${IMAGE_TAG}"
+          docker push "${REG_PREFIX}-knowledge:${IMAGE_TAG}"
+          docker push "${REG_PREFIX}-xai:${IMAGE_TAG}"
+          docker push "${REG_PREFIX}-llm-gateway:${IMAGE_TAG}"
+          docker push "${REG_PREFIX}-fhir-adapter:${IMAGE_TAG}"
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" > "$HOME/.kube/config"
+
+      - name: Helm upgrade NurseAda
+        run: |
+          REG_PREFIX="${REGISTRY}/${{ github.repository }}/nurseada"
+          helm upgrade --install nurseada infra/helm/nurseada \
+            --set image.registry="${REG_PREFIX%-gateway}"- \
+            --set gateway.image.repository="gateway" \
+            --set gateway.image.tag="${IMAGE_TAG}" \
+            --set cdss.image.repository="cdss" \
+            --set cdss.image.tag="${IMAGE_TAG}" \
+            --set knowledge.image.repository="knowledge" \
+            --set knowledge.image.tag="${IMAGE_TAG}" \
+            --set xai.image.repository="xai" \
+            --set xai.image.tag="${IMAGE_TAG}" \
+            --set llmGateway.image.repository="llm-gateway" \
+            --set llmGateway.image.tag="${IMAGE_TAG}" \
+            --set fhirAdapter.image.repository="fhir-adapter" \
+            --set fhirAdapter.image.tag="${IMAGE_TAG}"
+

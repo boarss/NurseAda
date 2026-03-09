@@ -1,9 +1,18 @@
 """
 General agent: LLM + knowledge base for non-specialized health questions.
+When LLM is not configured, falls back to triage for symptom-like queries.
 """
+import re
 import httpx
 from app.agents.base import BaseAgent, AgentResult
+from app.agents.triage_agent import TriageAgent
 from app.config import GATEWAY_LLM_URL, GATEWAY_KNOWLEDGE_URL
+
+# Symptom-like terms: route to triage when LLM unavailable
+SYMPTOM_TERMS = re.compile(
+    r"\b(pain|fever|cough|headache|symptom|sick|hurt|ache|bleed|breath|vomit|dizzy|tired|rash|swell|diarrhea|chest|stomach|throat|unwell|feel|nausea|weak|fatigue|ketone|ketones|dka|diabetes|blood sugar)\b",
+    re.I,
+)
 
 
 def get_standard_disclaimer() -> str:
@@ -29,6 +38,7 @@ class GeneralAgent(BaseAgent):
 
         # Optional: RAG from knowledge base
         extra_context = ""
+        knowledge_chunks: list[dict] = []
         if GATEWAY_KNOWLEDGE_URL:
             try:
                 async with httpx.AsyncClient() as client:
@@ -39,18 +49,38 @@ class GeneralAgent(BaseAgent):
                     )
                     if r.status_code == 200:
                         data = r.json()
-                        chunks = data.get("chunks", [])
-                        if chunks:
+                        knowledge_chunks = data.get("chunks", [])
+                        if knowledge_chunks:
                             extra_context = "\n".join(
                                 c.get("text", c) if isinstance(c, dict) else str(c)
-                                for c in chunks[:3]
+                                for c in knowledge_chunks[:3]
                             )
             except Exception:
                 pass
 
         if not GATEWAY_LLM_URL:
+            # Fallback 1: if knowledge returned DKA/ketone/diabetes chunks, use them
+            if knowledge_chunks and any(
+                kw in user_message.lower()
+                for kw in ("dka", "ketone", "ketones", "diabetes", "blood sugar")
+            ):
+                lines = ["Based on clinical guidance:\n"]
+                for c in knowledge_chunks:
+                    t = c.get("text", c) if isinstance(c, dict) else str(c)
+                    if t:
+                        lines.append(f"• {t}")
+                if len(lines) > 1:
+                    return AgentResult(
+                        content="\n".join(lines) + get_standard_disclaimer(),
+                        agent_id=self.agent_id,
+                        sources=["Knowledge"],
+                    )
+            # Fallback 2: route symptom-like queries to triage
+            if SYMPTOM_TERMS.search(user_message):
+                triage_result = await TriageAgent().execute(user_message, context=context)
+                return triage_result
             return AgentResult(
-                content="I'm not connected to the language model right now. Please try again later or contact support."
+                content="I'm not connected to the language model right now. For symptom checks, try describing your symptoms (e.g. headache, fever, cough). For DKA/ketone questions, describe your situation and I'll give guidance."
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
             )

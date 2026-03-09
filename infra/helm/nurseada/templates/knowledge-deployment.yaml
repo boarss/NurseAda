@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nurseada-knowledge
+  labels:
+    app: nurseada-knowledge
+spec:
+  replicas: {{ .Values.knowledge.replicaCount }}
+  selector:
+    matchLabels:
+      app: nurseada-knowledge
+  template:
+    metadata:
+      labels:
+        app: nurseada-knowledge
+    spec:
+      containers:
+        - name: knowledge
+          image: "{{ .Values.image.registry }}{{ .Values.knowledge.image.repository }}:{{ .Values.knowledge.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8003
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8003
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources: {{- toYaml .Values.knowledge.resources | nindent 12 }}
+

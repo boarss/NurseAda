@@ -50,6 +50,7 @@ User → Gateway (chat) → Orchestrator
 | **triage**    | Symptom/diagnosis support | CDSS, FHIR Observation              | Symptom/diagnosis keywords|
 | **medication**| Drug info, interactions   | CDSS (drug-interactions), FHIR MedicationRequest, Pharmacy API | Medication keywords |
 | **lab**       | Lab orders/results        | FHIR Observation, Lab API           | Lab/test keywords         |
+| **explain**   | Explainability (XAI)      | XAI service (SHAP, LIME, heatmaps, saliency) | "why", "explain", "how did you decide" |
 | **general**   | General health Q&A        | LLM Gateway, Knowledge (RAG)        | Default fallback          |
 
 - **Intent detection** is rule-based (keyword patterns). It can be replaced or extended with an LLM classifier.
@@ -108,7 +109,20 @@ If input or output verification fails, the user sees a **safe fallback message**
 
 ---
 
-## 8. Emergency Services
+## 8. Explainability (XAI)
+
+- **Usage**: Explain agent and optional triage follow-up use the XAI service for **model transparency**, **post-hoc explanations** (SHAP, LIME), and **visualisation** (symptom heatmaps, saliency placeholder for radiology).
+- **Config**: `GATEWAY_XAI_URL` in the gateway (e.g. `http://localhost:8012`).
+- **Service**: `services/xai` (FastAPI).
+- **Endpoints**:
+  - **Model transparency**: `GET /model/decision-tree/structure`, `GET /model/logistic-regression/coefficients`, `POST /predict/transparent` (symptom features → severity + explanation).
+  - **Post-hoc**: `POST /explain/shap`, `POST /explain/lime` (feature contribution and local explanation).
+  - **Visualisation**: `POST /visualize/symptom-heatmap` (JSON or PNG base64), `POST /visualize/saliency` (tabular saliency or radiology placeholder).
+- **Agent**: Messages containing "why", "explain", "how did you decide", "show reasoning" are routed to the **explain** agent, which calls the XAI service and returns transparent model output, SHAP values, and LIME local importance.
+
+---
+
+## 9. Emergency Services
 
 - **Usage**: Emergency agent provides hotline info and can escalate (e.g. create FHIR Task, call emergency API).
 - **Config**: `EMERGENCY_API_URL` in the gateway.
@@ -117,7 +131,7 @@ If input or output verification fails, the user sees a **safe fallback message**
 
 ---
 
-## 9. Gateway Configuration Summary
+## 10. Gateway Configuration Summary
 
 | Env var               | Purpose                    | Used by      |
 |-----------------------|----------------------------|-------------|
@@ -125,6 +139,7 @@ If input or output verification fails, the user sees a **safe fallback message**
 | `GATEWAY_CDSS_URL`    | CDSS service base URL      | Triage, Medication |
 | `GATEWAY_LLM_URL`     | LLM gateway base URL       | General agent |
 | `GATEWAY_KNOWLEDGE_URL` | Knowledge service base URL | General agent |
+| `GATEWAY_XAI_URL`     | XAI service base URL       | Explain agent |
 | `PHARMACY_API_URL`    | Pharmacy API base URL      | Medication agent |
 | `LAB_API_URL`        | Lab API base URL           | Lab agent |
 | `EMERGENCY_API_URL`   | Emergency escalation API   | Emergency agent |
@@ -137,10 +152,10 @@ FHIR adapter:
 
 ---
 
-## 10. Deployment and Verification Before Use
+## 11. Deployment and Verification Before Use
 
 - **Deploy**:
-  - Run **fhir-adapter** (e.g. port 8011), **gateway** (8080), **cdss** (8002), **llm-gateway** (8001), **knowledge** (8003).
+  - Run **fhir-adapter** (8011), **gateway** (8080), **cdss** (8002), **llm-gateway** (8001), **knowledge** (8003), **xai** (8012).
   - Configure env vars above for any external systems (FHIR server, pharmacy, lab, emergency).
 - **Verification before production**:
   - **Input/output verification**: Unit tests for `verify_agent_input` and `verify_agent_output` with valid/invalid inputs and outputs.

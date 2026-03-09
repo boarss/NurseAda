@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nurseada-xai
+  labels:
+    app: nurseada-xai
+spec:
+  type: {{ .Values.xai.service.type }}
+  selector:
+    app: nurseada-xai
+  ports:
+    - port: {{ .Values.xai.service.port }}
+      targetPort: 8012
+      protocol: TCP
+      name: http
+

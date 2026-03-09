@@ -1,0 +1,30 @@
+---
+description: NurseAda infrastructure, config, and service layout
+globs: scripts/**/*, **/config.py, **/.env*, infra/**/*, **/Dockerfile
+alwaysApply: false
+---
+
+# NurseAda Infrastructure Consistency
+
+## Service Ports
+
+| Service | Port | Env URL |
+|---------|------|---------|
+| Gateway | 8080 | NEXT_PUBLIC_GATEWAY_URL, EXPO_PUBLIC_GATEWAY_URL |
+| CDSS | 8002 | GATEWAY_CDSS_URL |
+| Knowledge | 8003 | GATEWAY_KNOWLEDGE_URL |
+| XAI | 8012 | GATEWAY_XAI_URL |
+| LLM | 8001 | GATEWAY_LLM_URL |
+| FHIR adapter | 8011 | GATEWAY_FHIR_URL |
+
+## Config Pattern
+
+- Use `_url(key, default="")` for optional service URLs. Empty string = not configured.
+- Add new URLs to `services/gateway/app/config.py` and `.env.example`.
+- Document in `.env.example` with comment.
+
+## Start Scripts
+
+- Update `scripts/start-dev-all.ps1` when adding services.
+- Set env vars for gateway before starting it (GATEWAY_CDSS_URL, etc.).
+- Start order: CDSS → XAI → Knowledge → Gateway → Web.

@@ -1,0 +1,66 @@
+---
+description: Cross-cutting NurseAda standards for consistency
+alwaysApply: true
+---
+
+# NurseAda Project Consistency
+
+## Medical Logic Flow
+
+All medical logic flows through `services/gateway/app/agents/`. Do not add clinical logic in routers, web app, or other services—route to agents.
+
+## Professional Discourse
+
+Use practitioner-like tone: "Based on what you've shared", "Here's what I recommend", "I'd like to help". See `nurseada-professional-discourse.mdc`.
+
+## Disclaimer
+
+Every clinical response must include: "This is general information only, not medical advice. Consult a healthcare provider. In an emergency, seek care immediately."
+
+## Triage Response Format
+
+```
+Based on your description, severity assessment: **{severity}**.
+Confidence: {n}%.
+My assessment: {reasoning}
+Recommendations:
+• {suggestion 1}
+• {suggestion 2}
+```
+
+## Intent and Code Check
+
+- Add new symptom/clinical terms to both: `orchestrator.py` (TRIAGE_PATTERNS, EMERGENCY_PATTERNS) and `services/cdss/app/code_check.py` (TRIAGE_MIN_TERMS).
+- Never block users describing symptoms—expand patterns for natural language.
+
+## Fallback Triage
+
+When adding triage rules to CDSS `triage_logic.py`, add matching rules to `services/gateway/app/services/fallback_triage.py` so users get advice when CDSS is not configured.
+
+## Patient Data
+
+- Chat accepts `patient_id` in request; pass to context for agents.
+- Triage, medication, lab, emergency agents use `patient_id` to pull FHIR Observation, MedicationRequest, DiagnosticReport when `GATEWAY_FHIR_URL` is set.
+- GET `/patient/{id}` proxies to FHIR for demography.
+
+## Herbal/Natural Remedies
+
+- Herbal agent: route when user mentions herbal, natural remedy, traditional, bitter leaf, ginger, moringa, turmeric.
+- Triage enriches non-emergency responses with herbal options (complementary) when Knowledge is configured.
+- Herbal content in `services/knowledge/app/herbal_content.py`; retrieval via `/retrieve/herbal`.
+- Always frame as complementary to—not substitute for—conventional care.
+
+## Medical Imaging
+
+- Imaging agent: route when user attaches image or mentions xray, CT, MRI, radiology.
+- Context may include `image_base64` or `image_url`. Agent calls XAI `/visualize/saliency`.
+- Provide fallback when XAI not configured; direct users to radiologist for interpretation.
+
+## New Feature Checklist
+
+For any new feature, ensure consistency across:
+
+1. **Implementation**: Medical logic in agents; UI in apps/web or apps/mobile.
+2. **Infrastructure**: Add to config, .env.example, start script if new service.
+3. **Integrations**: Document API contract; add fallback when calling external services.
+4. **Rules**: Update relevant .cursor/rules/*.mdc if patterns change.

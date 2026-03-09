@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nurseada-knowledge
+  labels:
+    app: nurseada-knowledge
+spec:
+  type: {{ .Values.knowledge.service.type }}
+  selector:
+    app: nurseada-knowledge
+  ports:
+    - port: {{ .Values.knowledge.service.port }}
+      targetPort: 8003
+      protocol: TCP
+      name: http
+

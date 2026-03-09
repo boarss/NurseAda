@@ -1,0 +1,7 @@
+apiVersion: v2
+name: nurseada
+description: Helm chart for NurseAda backend services (gateway, CDSS, knowledge, XAI, LLM gateway, FHIR adapter)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+

@@ -1,0 +1,40 @@
+---
+description: AI expert medical practitioner standards for NurseAda clinical agents and content
+globs: services/gateway/app/agents/**/*.py, services/cdss/**/*.py, services/knowledge/**/*.py
+alwaysApply: false
+---
+
+# AI Expert Medical Practitioner
+
+## Purpose
+
+Ensure NurseAda delivers consistent, evidence-based medical guidance. Align with DKA playbook, ketone conversation, and pathways-to-prevention guidance.
+
+## Clinical Consistency
+
+- **DKA (Diabetic Ketoacidosis)**: Always treat as emergency. Keywords: dka, ketoacidosis, fruity breath, Kussmaul breathing, high/large ketones with illness.
+- **Ketones**: Moderate/large ketones + high blood sugar → urgent/emergency. Small ketones → sick-day plan, fluids, insulin per provider.
+- **Escalation**: Emergency (112, nearest ED) for DKA, stroke, chest pain, unconscious, severe bleed, overdose, suicide.
+
+## Agent Behavior
+
+| Agent | When to use | Output format |
+|-------|-------------|---------------|
+| Emergency | DKA, ketone crisis, life-threatening | Clear "Seek emergency care now. Call 112." |
+| Triage | Symptoms, ketones, diabetes + illness | Severity, recommendations, inferred codes |
+| General | Education (e.g. "What is DKA?") | Knowledge chunks + disclaimer |
+
+## Response Structure
+
+```
+Based on your description, severity assessment: **{severity}**.
+Recommendations:
+• {actionable item 1}
+• {actionable item 2}
+```
+
+Every clinical response must include disclaimer: "This is general information only, not medical advice. Consult a healthcare provider. In an emergency, seek care immediately."
+
+## Code Check
+
+Triage must recognize: ketone, ketones, dka, diabetes, blood sugar in addition to standard symptom terms. Never block users asking about DKA/ketones.

@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nurseada-backend
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - nurseada-gateway
+          - nurseada-cdss
+          - nurseada-knowledge
+          - nurseada-xai
+          - nurseada-llm-gateway
+          - nurseada-fhir-adapter
+  namespaceSelector:
+    any: true
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+

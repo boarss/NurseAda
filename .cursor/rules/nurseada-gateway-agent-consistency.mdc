@@ -1,0 +1,46 @@
+---
+description: Gateway agent structure and registration for NurseAda
+globs: services/gateway/app/agents/**/*.py
+alwaysApply: false
+---
+
+# NurseAda Gateway Agent Consistency
+
+## Agent Structure
+
+Every agent must extend `BaseAgent` and implement:
+
+```python
+@property
+def agent_id(self) -> str:
+    return "agent_name"  # lowercase, matches orchestrator key
+
+@property
+def description(self) -> str:
+    return "Short description for routing"
+
+async def execute(self, user_message: str, context: dict | None = None) -> AgentResult:
+    ...
+```
+
+## AgentResult
+
+Always return `AgentResult(content=..., agent_id=self.agent_id, sources=[], metadata=None)`.
+
+- `content`: Must include actionable guidance. Never return empty or "not configured" without fallback.
+- `agent_id`: Use `self.agent_id`.
+- `sources`: List backend sources used (e.g. `["CDSS"]`, `["Knowledge"]`).
+
+## Fallback When Service Unavailable
+
+When CDSS/LLM/Knowledge is not configured or fails:
+
+- Return helpful guidance (e.g. fallback triage, knowledge chunks) when possible.
+- Never block users with "not configured" alone—provide actionable next steps.
+- Always append disclaimer via `get_standard_disclaimer()`.
+
+## Register New Agents
+
+1. Add to `AGENTS` dict in `orchestrator.py`.
+2. Add intent patterns to `_detect_intent` (order: emergency → explain → medication → lab → imaging → herbal → triage → general).
+3. If agent needs code check, add to `AGENTS_REQUIRING_CODE_CHECK` in `code_checker.py` and implement in CDSS `code_check.py`.

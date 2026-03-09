@@ -17,6 +17,7 @@ See [NurseAda_PRD.md](./NurseAda_PRD.md) for full product requirements, architec
 | `services/knowledge` | Medical knowledge base, vector search, retrieval |
 | `services/ussd` | USSD/IVR bridge: provider webhooks → gateway chat (short replies) |
 | `services/fhir-adapter` | HL7 FHIR proxy (Patient, Observation, MedicationRequest, Task) for EHR integration |
+| `services/xai` | Explainable AI: decision tree / logistic regression, SHAP, LIME, symptom heatmaps, saliency (radiology placeholder) |
 | `packages/shared-ts` | Shared TypeScript types and constants |
 | `infra` | Deployment and infrastructure (K8s, CI/CD) |
 | `docs/integrations/` | [Integration architecture](docs/integrations/INTEGRATION_ARCHITECTURE.md) (FHIR, EHR, pharmacy, lab, emergency, agent teams, verification) |
@@ -29,14 +30,24 @@ See [NurseAda_PRD.md](./NurseAda_PRD.md) for full product requirements, architec
 - Python 3.10+
 - (Optional) Docker for running services
 
-### Web app
+### Web app (and full stack)
+
+**Option A – start everything (recommended):**
+
+```powershell
+.\scripts\start-dev-all.ps1
+```
+
+This starts CDSS (8002), XAI (8012), Gateway (8080), then the web app (3000). Open [http://localhost:3000](http://localhost:3000) and click **Start chat**.
+
+**Option B – start only the web app:**
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). For chat to work, run the gateway (and optionally CDSS/XAI) in other terminals—see "Backend services (local)" below.
 
 ### Mobile (React Native / Expo)
 

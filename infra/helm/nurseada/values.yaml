@@ -1,0 +1,94 @@
+image:
+  registry: ""
+  pullPolicy: IfNotPresent
+
+gateway:
+  enabled: true
+  image:
+    repository: nurseada/gateway
+    tag: "latest"
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    port: 8080
+  resources: {}
+
+cdss:
+  enabled: true
+  image:
+    repository: nurseada/cdss
+    tag: "latest"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8002
+  resources: {}
+
+knowledge:
+  enabled: true
+  image:
+    repository: nurseada/knowledge
+    tag: "latest"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8003
+  resources: {}
+
+xai:
+  enabled: true
+  image:
+    repository: nurseada/xai
+    tag: "latest"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8012
+  resources: {}
+
+llmGateway:
+  enabled: true
+  image:
+    repository: nurseada/llm-gateway
+    tag: "latest"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8001
+  resources: {}
+
+fhirAdapter:
+  enabled: true
+  image:
+    repository: nurseada/fhir-adapter
+    tag: "latest"
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8011
+  resources: {}
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  hosts:
+    - host: nurseada.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+env:
+  gateway:
+    GATEWAY_CDSS_URL: "http://nurseada-cdss:8002"
+    GATEWAY_KNOWLEDGE_URL: "http://nurseada-knowledge:8003"
+    GATEWAY_XAI_URL: "http://nurseada-xai:8012"
+    GATEWAY_LLM_URL: "http://nurseada-llm-gateway:8001"
+    GATEWAY_FHIR_URL: "http://nurseada-fhir-adapter:8011"
+
+metrics:
+  enabled: true
+  path: /metrics
+  port: 8000
+

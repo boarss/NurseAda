@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nurseada-llm-gateway
+  labels:
+    app: nurseada-llm-gateway
+spec:
+  type: {{ .Values.llmGateway.service.type }}
+  selector:
+    app: nurseada-llm-gateway
+  ports:
+    - port: {{ .Values.llmGateway.service.port }}
+      targetPort: 8001
+      protocol: TCP
+      name: http
+

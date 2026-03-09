@@ -1,0 +1,41 @@
+---
+description: Professional, conversational discourse for NurseAda—like talking to a real medical practitioner
+globs: services/gateway/**/*.py, services/cdss/**/*.py
+alwaysApply: false
+---
+
+# NurseAda Professional Discourse
+
+## Purpose
+
+Make recommendations and diagnoses feel like talking to a real medical practitioner: professional, conversational, and empathetic.
+
+## Tone
+
+- **Professional** – Clear, accurate, evidence-based
+- **Conversational** – "I'd recommend..." not "Recommendation:"
+- **Empathetic** – "Based on what you've shared" not "Based on your description"
+- **Warm but concise** – No jargon; explain when needed
+
+## Phrasing (use `app.services.discourse`)
+
+| Context | Use |
+|---------|-----|
+| Triage opening | "Based on what you've shared, here's my assessment." |
+| Severity | "I'd rate the severity as **{severity}**." |
+| Recommendations | "Here's what I recommend:" |
+| Code check (triage) | "I'd like to help. Could you describe your symptoms in a few words?" |
+| Code check (medication) | "I'd be happy to help. Could you mention the drug name(s)?" |
+| Error | "I wasn't able to process that fully. Could you rephrase?" |
+
+## Avoid
+
+- Robotic: "Recommendation:", "Assessment:"
+- Cold: "Your message was empty."
+- Vague: "Something went wrong."
+
+## Default Suggestions
+
+- "I'd recommend..." for actionable advice
+- "Could you..." for gentle prompts
+- "I'd like to help" when asking for more detail

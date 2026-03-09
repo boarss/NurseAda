@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nurseada-cdss
+  labels:
+    app: nurseada-cdss
+spec:
+  replicas: {{ .Values.cdss.replicaCount }}
+  selector:
+    matchLabels:
+      app: nurseada-cdss
+  template:
+    metadata:
+      labels:
+        app: nurseada-cdss
+    spec:
+      containers:
+        - name: cdss
+          image: "{{ .Values.image.registry }}{{ .Values.cdss.image.repository }}:{{ .Values.cdss.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8002
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources: {{- toYaml .Values.cdss.resources | nindent 12 }}
+
