@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",
