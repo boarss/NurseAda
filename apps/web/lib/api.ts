@@ -81,14 +81,14 @@ export async function sendChatMessage(
 
 export type PatientSummary = {
   resourceType: "Patient";
-  id?: number;
-  name?: { given?: string[]; family?: string };
-  birthDate?: Date;
+  id?: string;  // <- string to match backend
+  name?: { given?: string[]; family?: string }[];  // or Array<{ given?: string[]; family?: string }>
+  birthDate?: string;
   gender?: "male" | "female" | "other";
 };
 
 export async function getPatient(
-  patientId: number,
+  patientId: string,
   token?: string | null
 ): Promise<PatientSummary> {
   const res = await fetch(`${GATEWAY_URL}/patient/${patientId}`, {
