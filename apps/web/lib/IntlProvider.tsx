@@ -44,7 +44,7 @@ export function IntlProvider({ children }: { children: ReactNode }) {
 
   if (!mounted) {
     return (
-      <NextIntlClientProvider locale="en" messages={en}>
+      <NextIntlClientProvider locale="en" messages={en} timeZone="Africa/Lagos">
         {children}
       </NextIntlClientProvider>
     );
@@ -52,7 +52,7 @@ export function IntlProvider({ children }: { children: ReactNode }) {
 
   return (
     <LocaleContext.Provider value={{ locale, setLocale: handleSetLocale }}>
-      <NextIntlClientProvider locale={locale} messages={messages}>
+      <NextIntlClientProvider locale={locale} messages={messages} timeZone="Africa/Lagos">
         {children}
       </NextIntlClientProvider>
     </LocaleContext.Provider>
