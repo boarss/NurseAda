@@ -36,7 +36,7 @@ export default function SignInPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm space-y-6">
+      <div className="w-full max-w-sm space-y-6 opacity-0 animate-in">
         <div className="text-center">
           <h1 className="font-display text-3xl font-semibold text-fg">
             {t("auth.welcomeBack")}

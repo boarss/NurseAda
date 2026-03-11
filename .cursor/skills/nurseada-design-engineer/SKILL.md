@@ -13,7 +13,7 @@ Apply design-engineer standards to NurseAda so every interaction feels intention
 
 ## Motion
 
-- **Tokens**: Use CSS variables in [apps/web/app/globals.css](apps/web/app/globals.css): `--duration-fast`, `--duration-normal`, `--duration-slow`, `--ease-spring`, `--ease-out-expo`, `--stagger-delay`. Extend Tailwind in [apps/web/tailwind.config.ts](apps/web/tailwind.config.ts) for `duration-fast`, `ease-out-expo`, etc.
+- **Tokens**: Use CSS variables in [apps/web/app/globals.css](apps/web/app/globals.css): `--duration-fast`, `--duration-normal`, `--duration-slow`, `--ease-out`, `--ease-spring`, `--ease-out-expo`, `--stagger-delay`. Extend Tailwind in [apps/web/tailwind.config.ts](apps/web/tailwind.config.ts) for `duration-fast`, `ease-out`, `ease-out-expo`, etc.
 - **Prefer CSS**: Use CSS transitions and keyframes for hover, active, and enter/exit. Use a JS animation library only when CSS cannot achieve the effect (e.g. layout animations, spring physics).
 - **Reduced motion**: All motion is disabled when the user prefers reduced motion via the block in `globals.css`. Do not add animations that bypass it.
 - **Exit &lt; enter**: If you add explicit exit animations, make exit duration shorter than enter (e.g. 60–75% of enter).
@@ -42,6 +42,12 @@ Apply design-engineer standards to NurseAda so every interaction feels intention
 - **Theme**: Use [apps/mobile/lib/theme.ts](apps/mobile/lib/theme.ts) for `colors`, `spacing`, and `radius`. Replace hardcoded hex so palette and spacing are consistent and single-source.
 - **Press feedback**: Every primary action uses `Pressable` with `style={({ pressed }) => [baseStyle, pressed && { opacity: 0.85 }]}` (or equivalent) so users get immediate visual response.
 - **Haptics**: Use [apps/mobile/lib/haptics.ts](apps/mobile/lib/haptics.ts). Trigger `hapticSuccess()` on confirmations (reminder saved, appointment requested, interaction check); `hapticWarning()` on destructive actions (delete, cancel). Guard with `isHapticsAvailable()`; do not overuse.
+
+## Anti-patterns
+
+- No linear easing for UI transitions; use custom curves or spring.
+- No layout shift from loading; reserve space or use skeletons.
+- No animation without a reduced-motion fallback (globals.css handles this globally).
 
 ## Accessibility
 

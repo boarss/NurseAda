@@ -38,3 +38,4 @@ htmlcov/
 # Optional
 *.tsbuildinfo
 .vercel
+.env*.local

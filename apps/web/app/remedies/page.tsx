@@ -85,7 +85,7 @@ function RemedyCard({
               label={remedy.evidence_label}
             />
             <span
-              className="text-muted text-sm transition-transform"
+              className="text-muted text-sm transition-transform duration-fast ease-out-expo"
               style={{ transform: expanded ? "rotate(180deg)" : "none" }}
               aria-hidden
             >
@@ -95,8 +95,11 @@ function RemedyCard({
         </div>
       </button>
 
-      {expanded && (
-        <div className="px-5 pb-5 pt-0 space-y-3 animate-in">
+      <div
+        className={`overflow-hidden transition-[max-height] duration-normal ease-out-expo ${expanded ? "max-h-[600px]" : "max-h-0"}`}
+        aria-hidden={!expanded}
+      >
+        <div className="px-5 pb-5 pt-0 space-y-3">
           <p className="font-body text-sm text-fg leading-relaxed">{body}</p>
 
           {remedy.contraindications.length > 0 && (
@@ -110,7 +113,7 @@ function RemedyCard({
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

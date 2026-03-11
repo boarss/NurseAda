@@ -1,5 +1,6 @@
+import { useEffect, useRef } from "react";
 import { Link } from "expo-router";
-import { Text, View, StyleSheet, Pressable } from "react-native";
+import { Text, View, StyleSheet, Pressable, Animated } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../lib/AuthContext";
 import { LanguagePicker } from "../components/LanguagePicker";
@@ -11,11 +12,31 @@ const { colors, spacing, radius } = theme;
 export default function HomeScreen() {
   const { t } = useTranslation();
   const { user, signOut, loading } = useAuth();
+  const fade = useRef(new Animated.Value(0)).current;
+  const slide = useRef(new Animated.Value(12)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fade, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slide, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fade, slide]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{t("meta.appName")}</Text>
-      <Text style={styles.subtitle}>{t("home.subtitle")}</Text>
+      <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>
+        <Text style={styles.title}>{t("meta.appName")}</Text>
+        <Text style={styles.subtitle}>{t("home.subtitle")}</Text>
+      </Animated.View>
+      <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>
       <Link href="/chat" asChild>
         <Pressable
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -39,6 +60,7 @@ export default function HomeScreen() {
           <Text style={styles.secondaryButtonText}>{t("home.appointments")}</Text>
         </Pressable>
       </Link>
+      </Animated.View>
 
       {!loading && (
         <View style={styles.authRow}>

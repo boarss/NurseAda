@@ -337,6 +337,7 @@ export default function ChatPage() {
                   ? "ml-auto bg-bubble-user text-white"
                   : "mr-auto bg-bubble-assistant text-fg"
               }`}
+              style={{ animationDelay: `calc(var(--stagger-delay) * ${Math.min(i, 8)})` }}
             >
               {m.role === "user" ? (
                 <div className="space-y-2">

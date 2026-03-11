@@ -37,6 +37,7 @@ const config: Config = {
         slow: "var(--duration-slow)",
       },
       transitionTimingFunction: {
+        out: "var(--ease-out)",
         spring: "var(--ease-spring)",
         "out-expo": "var(--ease-out-expo)",
       },
