@@ -3,7 +3,7 @@
  * Set NEXT_PUBLIC_GATEWAY_URL in .env (e.g. http://localhost:8000).
  */
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL ?? "";
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8000";
 
 function authHeaders(token?: string | null): Record<string, string> {
   const h: Record<string, string> = { "Content-Type": "application/json" };
@@ -11,61 +11,84 @@ function authHeaders(token?: string | null): Record<string, string> {
   return h;
 }
 
-export async function healthCheck(): Promise<{ status: string }> {
+export async function healthCheck(): Promise<{ status: "healthy" | "unhealthy" }> {
   const res = await fetch(`${GATEWAY_URL}/health`, { cache: "no-store" });
   if (!res.ok) throw new Error("Health check failed");
   return res.json();
 }
-
+// Types for chat
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export type ChatOptions = {
-  patientId?: string | null;
+  patientId?: string | null;                // send as string to backend
   imageBase64?: string | null;
   token?: string | null;
-  locale?: string | null;
+  locale?: "en" | "pcm" | "ha" | "yo" | "ig" | null;
 };
+
+export type ChatResponse = string; // backend reply text
 
 export async function sendChatMessage(
   messages: ChatMessage[],
   options?: ChatOptions
-): Promise<{ reply: string }> {
-  const body: Record<string, unknown> = { messages };
+): Promise<{ reply: ChatResponse }> {
+  type BodyType = {
+    messages: ChatMessage[];
+    patient_id?: string | null;
+    image_base64?: string | null;
+    locale?: string | null;
+  };
+
+  const body: BodyType = {
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+  };
+
   if (options?.patientId) body.patient_id = options.patientId;
   if (options?.imageBase64) body.image_base64 = options.imageBase64;
   if (options?.locale) body.locale = options.locale;
+
   const res = await fetch(`${GATEWAY_URL}/chat`, {
     method: "POST",
     headers: authHeaders(options?.token),
     body: JSON.stringify(body),
   });
+
   const text = await res.text();
   if (!res.ok) {
     let msg = "Chat request failed";
     try {
       const parsed = text ? JSON.parse(text) : {};
-      if (parsed.detail) msg = typeof parsed.detail === "string" ? parsed.detail : parsed.detail[0]?.msg ?? msg;
-      else if (parsed.message) msg = parsed.message;
+      if (parsed.detail) {
+        msg =
+          typeof parsed.detail === "string"
+            ? parsed.detail
+            : parsed.detail[0]?.msg ?? msg;
+      } else if (parsed.message) {
+        msg = parsed.message;
+      }
     } catch {
       if (res.status === 401) msg = "Please sign in to continue.";
-      else if (res.status === 404) msg = "Gateway not found. Ensure the gateway is running.";
-      else if (res.status >= 500) msg = "Server error. Please try again shortly.";
+      else if (res.status === 404)
+        msg = "Gateway not found. Ensure the gateway is running.";
+      else if (res.status >= 500)
+        msg = "Server error. Please try again shortly.";
     }
     throw new Error(msg);
   }
+
   return text ? JSON.parse(text) : { reply: "" };
 }
 
 export type PatientSummary = {
-  resourceType: string;
-  id?: string;
-  name?: Array<{ given?: string[]; family?: string }>;
-  birthDate?: string;
-  gender?: string;
+  resourceType: "Patient";
+  id?: number;
+  name?: { given?: string[]; family?: string };
+  birthDate?: Date;
+  gender?: "male" | "female" | "other";
 };
 
 export async function getPatient(
-  patientId: string,
+  patientId: number,
   token?: string | null
 ): Promise<PatientSummary> {
   const res = await fetch(`${GATEWAY_URL}/patient/${patientId}`, {
