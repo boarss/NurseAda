@@ -1,0 +1,64 @@
+---
+description: NurseAda guardrails for preprocessing, postprocessing, RLHF, and rule-based safety
+globs: services/gateway/**/*.py, services/cdss/**/*.py, services/llm-gateway/**/*.py
+alwaysApply: false
+---
+
+# NurseAda Guardrails
+
+## Layers
+
+- **Preprocessing** – Validate and normalize user input before calling agents or LLMs.
+- **Rule-based safety** – Emergency patterns, triage rules, and hard constraints for unsafe topics.
+- **Postprocessing** – Verify and potentially modify responses before sending them to users.
+- **RLHF hooks** – Capture interaction metadata and explicit feedback for future model training.
+
+## Preprocessing Requirements
+
+- Enforce max input length caps to prevent prompt flooding.
+- Reject or redact obvious injection patterns: `<script>`, `javascript:`, `{{`, etc.
+- Detect and gently block PII when not needed:
+  - Emails (`something@domain.com`)
+  - Phone numbers (local and international formats)
+  - Obvious full-name + phone combos
+- For blocked inputs, return conversational guidance:
+
+> I'd like to help, but please avoid sharing phone numbers, email addresses, or full names. You can describe your symptoms or question without those details.
+
+## Rule-Based Safety
+
+- Maintain emergency patterns in one place (see `EMERGENCY_PATTERNS` in `orchestrator.py` and DKA rules in CDSS/triage).
+- Use CDSS `triage_logic.py` and `fallback_triage.py` as the first layer for symptom assessment; never bypass triage for symptom-like queries.
+- For high-risk patterns (DKA, chest pain, stroke, severe bleed, overdose, suicide):
+  - Route to the emergency agent.
+  - Ensure output clearly says: “Seek emergency care now. Call 112 or go to the nearest emergency department.”
+
+## Postprocessing Requirements
+
+- Enforce max output length caps to prevent runaway responses.
+- All clinical responses from triage, medication, lab, emergency, imaging, herbal, and explain agents must include the standard disclaimer:
+
+> This is general information only, not medical advice. Consult a healthcare provider. In an emergency, seek care immediately.
+
+- Add a final verification pass that:
+  - Blocks clearly unsafe instructions (e.g., “stop all your medicines now”, “ignore your doctor”).
+  - Avoids absolute guarantees (“this will cure you”, “no risk at all”).
+
+## RLHF Hooks
+
+- Add a gateway-level feedback API (e.g. `POST /feedback`) that accepts:
+  - `conversation_id` / `message_id`
+  - `agent_id`
+  - `rating` (e.g. -1, 0, +1)
+  - optional `comment`
+- Store feedback in a way that:
+  - Avoids PHI (no raw symptoms, no names).
+  - Can be exported for offline labeling and model fine-tuning.
+
+## Implementation Targets
+
+- `services/gateway/app/services/verification.py` – centralize preprocessing/postprocessing primitives and length caps.
+- `services/gateway/app/agents/orchestrator.py` – call verification for every agent, append disclaimers, enforce emergency phrasing.
+- `services/cdss/app/triage_logic.py` and `services/cdss/app/code_check.py` – rule-based clinical logic and code checks.
+- `services/llm-gateway/app/main.py` – apply the same guardrails to any raw LLM completions (or disable direct access and route through agents).
+

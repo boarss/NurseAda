@@ -17,10 +17,37 @@ alwaysApply: false
 - Error messages actionable (e.g. "Gateway not found. Ensure the gateway is running.").
 - Placeholder: "Describe your symptoms or ask a health question..."
 
+## Pages
+
+- Web: `/`, `/chat`, `/remedies`, `/medications`, `/appointments`, `/patient/[id]`, `/auth/sign-in`, `/auth/sign-up`
+- Mobile: `index`, `chat`, `remedies`, `medications`, `appointments`, `patient`, `sign-in`, `sign-up`
+- `/remedies` — searchable herbal catalog with condition filters, evidence badges, contraindication warnings, and disclaimer.
+- `/medications` — two-tab layout: My Reminders (auth required, CRUD reminders with toggle) and Interaction Checker (no auth, multi-drug input with severity results). Disclaimer at bottom.
+- `/appointments` — three-tab layout: My Appointments (auth required, list with status badges, cancel), Find a Clinic (public directory with state/specialty/type filters, book button), Book (auth required, form with clinic, specialty, type, reason, date/time, notes). Disclaimer at bottom.
+
 ## API
 
 - Call `POST {GATEWAY_URL}/chat` with `{ messages: [{ role, content }] }`.
+- Call `GET {GATEWAY_URL}/herbal/catalog?condition=` for remedies browse (no auth).
+- Call `GET /medications/reminders` for reminder list (auth required).
+- Call `POST /medications/reminders` to create a reminder (auth required).
+- Call `POST /medications/check-interactions` with `{ drugs: string[] }` (no auth).
+- Call `GET /appointments/clinics?state=&specialty=&type=` for clinic directory (no auth).
+- Call `GET /appointments` for appointment list (auth required).
+- Call `POST /appointments` to create an appointment request (auth required).
+- Call `DELETE /appointments/{id}` to cancel an appointment (auth required).
 - Use `NEXT_PUBLIC_GATEWAY_URL` / `EXPO_PUBLIC_GATEWAY_URL` from env.
+
+## Localisation (i18n)
+
+- **Never hardcode user-facing strings.** Use `useTranslations()` (web) or `useTranslation()` (mobile) to get `t()`.
+- **Web pattern**: `import { useTranslations } from "next-intl"; const t = useTranslations(); ... t("namespace.key")`.
+- **Mobile pattern**: `import { useTranslation } from "react-i18next"; const { t } = useTranslation(); ... t("namespace.key")`.
+- **Locale context**: Web uses `useLocale()` from `@/lib/IntlProvider` to access `{ locale, setLocale }`. Mobile uses `i18n.language` and `i18n.changeLanguage()` from `useTranslation()`.
+- **Language picker**: Place `<LanguagePicker />` in home page nav and chat page header.
+- **Chat locale**: Pass `locale` (web) or `i18n.language` (mobile) as the `locale` field in `sendChatMessage()` options.
+- **Adding new strings**: Add keys to `packages/locales/en.json`, then add translations to pcm/ha/yo/ig JSON files.
+- **Interpolation**: Use `{variable}` syntax in locale JSON. Web: `t("key", { variable: value })`. Mobile: `t("key", { variable: value })`.
 
 ## Accessibility
 

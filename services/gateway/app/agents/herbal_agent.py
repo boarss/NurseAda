@@ -1,11 +1,18 @@
 """
 Herbal agent: evidence-based herbal and natural remedy recommendations.
-Uses knowledge service /retrieve/herbal. Complementary to conventional care.
+Uses knowledge service /retrieve/herbal with context-aware safety filtering.
+Complementary to conventional care — never a substitute.
 """
+from __future__ import annotations
+
 import httpx
 from app.agents.base import BaseAgent, AgentResult
-from app.config import GATEWAY_KNOWLEDGE_URL
+from app.config import GATEWAY_KNOWLEDGE_URL, GATEWAY_FHIR_URL
 from app.services.verification import get_standard_disclaimer
+from app.services.discourse import (
+    format_herbal_response,
+    t as discourse_t,
+)
 
 
 class HerbalAgent(BaseAgent):
@@ -17,57 +24,107 @@ class HerbalAgent(BaseAgent):
     def description(self) -> str:
         return "Herbal and natural remedy recommendations (complementary to conventional care)"
 
+    async def _fetch_patient_medications(
+        self, patient_id: str
+    ) -> list[str]:
+        """Pull active medication names from FHIR when available."""
+        if not patient_id or not GATEWAY_FHIR_URL:
+            return []
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(
+                    f"{GATEWAY_FHIR_URL.rstrip('/')}/MedicationRequest",
+                    params={"patient": patient_id},
+                    timeout=8.0,
+                )
+                if r.status_code != 200:
+                    return []
+                data = r.json()
+                entries = data.get("entry", [])
+                meds: list[str] = []
+                for e in entries:
+                    res = e.get("resource", {})
+                    concept = res.get("medicationCodeableConcept", {})
+                    name = concept.get("text") or ""
+                    if not name:
+                        codings = concept.get("coding", [])
+                        if codings:
+                            name = codings[0].get("display", "")
+                    if name:
+                        meds.append(name)
+                return meds
+        except Exception:
+            return []
+
     async def execute(
         self,
         user_message: str,
         context: dict | None = None,
     ) -> AgentResult:
+        context = context or {}
+        locale = context.get("locale", "en")
+
         if not GATEWAY_KNOWLEDGE_URL:
             return AgentResult(
-                content="Herbal recommendations are not configured. For natural remedies, consult a healthcare provider or traditional healer. These are complementary to—not a substitute for—medical care."
+                content=discourse_t("could_not_match", locale)
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
                 sources=[],
             )
 
+        medications: list[str] = list(context.get("medications") or [])
+        patient_id = context.get("patient_id")
+        if patient_id and not medications:
+            medications = await self._fetch_patient_medications(patient_id)
+
+        retrieve_context: dict = {}
+        if medications:
+            retrieve_context["medications"] = medications
+
         try:
             async with httpx.AsyncClient() as client:
                 r = await client.post(
                     f"{GATEWAY_KNOWLEDGE_URL.rstrip('/')}/retrieve/herbal",
-                    json={"query": user_message, "top_k": 3},
+                    json={
+                        "query": user_message,
+                        "top_k": 3,
+                        "context": retrieve_context or None,
+                    },
                     timeout=8.0,
                 )
                 if r.status_code != 200:
                     return AgentResult(
-                        content="I couldn't fetch herbal recommendations right now. Please try again or consult a healthcare provider."
+                        content=discourse_t("could_not_process", locale)
                         + get_standard_disclaimer(),
                         agent_id=self.agent_id,
                         sources=[],
                     )
+
                 data = r.json()
                 chunks = data.get("chunks", [])
+
                 if not chunks:
                     return AgentResult(
-                        content="I'd like to help. Could you describe your symptoms—for example, nausea, cough, or headache? I can then suggest evidence-based complementary options. Please consult a healthcare provider for your situation."
+                        content=discourse_t("could_not_match", locale)
                         + get_standard_disclaimer(),
                         agent_id=self.agent_id,
                         sources=[],
                     )
-                lines = ["**Here are some complementary herbal/natural options:**\n"]
-                for c in chunks:
-                    t = c.get("text", "")
-                    if t:
-                        lines.append(f"• {t}")
-                content = "\n".join(lines) + get_standard_disclaimer()
+
+                body = format_herbal_response(chunks, locale)
+                body += discourse_t("herbal_disclaimer", locale)
+                body += get_standard_disclaimer()
+
                 return AgentResult(
-                    content=content,
+                    content=body,
                     agent_id=self.agent_id,
-                    sources=["Knowledge – Herbal"],
+                    sources=data.get("sources", ["Knowledge – Herbal"]),
                     metadata={"chunks": chunks},
                 )
+
         except Exception:
             return AgentResult(
-                content="Herbal recommendations are temporarily unavailable. For natural remedies, consult a healthcare provider. These complement—not replace—medical care."
+                content=discourse_t("something_went_wrong", locale)
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
                 sources=[],

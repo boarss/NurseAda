@@ -6,6 +6,10 @@ alwaysApply: false
 
 # NurseAda Integration Consistency
 
+## Gateway CORS
+
+- Origins are configurable via `CORS_ALLOW_ORIGINS` env var (comma-separated). Default: `http://localhost:3000,http://127.0.0.1:3000`. Production: include Vercel domain and custom domains.
+
 ## Gateway → Backend Calls
 
 - Use `httpx.AsyncClient()` with timeout (8–15s).
@@ -22,11 +26,46 @@ alwaysApply: false
 | CDSS | POST /drug-interactions | `{query, patient_id?}` | `{interactions, warnings, codes_checked}` |
 | Knowledge | POST /retrieve | `{query, top_k}` | `{chunks: [{text, source}], sources}` |
 | XAI | POST /visualize/saliency | `{image_url?, features?}` | `{type, ...}` (saliency_radiology or saliency_tabular) |
-| Knowledge | POST /retrieve/herbal | `{query, top_k}` | `{chunks: [{text, source, condition}], sources}` |
+| LLM | POST /v1/vision | `{image_base64, prompt?, max_tokens?}` | `{content, model, finish_reason}` |
+| Knowledge | POST /retrieve/herbal | `{query, top_k, context?}` | `{chunks: [{text, source, condition, evidence_level, evidence_label, contraindications, drug_interactions}], sources}` |
+| Knowledge | GET /herbal/catalog | `?condition=` (optional) | `{items: [{text, source, condition, evidence_level, evidence_label, contraindications, keywords}], total}` |
+
+## Medication Management
+
+| Service | Endpoint | Request | Response |
+|---------|----------|---------|----------|
+| Gateway | GET /medications/reminders | (auth required) | `{reminders: [{id, user_id, medication_name, dosage, frequency, reminder_times, start_date, end_date, is_active, notes, created_at, updated_at}]}` |
+| Gateway | POST /medications/reminders | `{medication_name, dosage?, frequency?, reminder_times?, start_date?, end_date?, notes?}` (auth) | `{id, ...reminder}` |
+| Gateway | PUT /medications/reminders/{id} | `{medication_name?, dosage?, frequency?, reminder_times?, is_active?, ...}` (auth) | `{id, ...reminder}` |
+| Gateway | DELETE /medications/reminders/{id} | (auth required) | 204 No Content |
+| Gateway | POST /medications/check-interactions | `{drugs: string[]}` (no auth) | `{interactions, warnings, codes_checked?, message?}` |
+
+## Appointment Coordination
+
+| Service | Endpoint | Request | Response |
+|---------|----------|---------|----------|
+| Knowledge | GET /clinics | `?state=&specialty=&type=&q=` (no auth) | `{clinics: [{id, name, address, city, state, phone, specialties, facility_type, accepts_telemedicine, hours}], total}` |
+| Gateway | GET /appointments | (auth required) | `{appointments: [{id, user_id, clinic_name, clinic_id, specialty, appointment_type, reason, preferred_date, preferred_time, status, severity, referral_agent, notes, created_at, updated_at}]}` |
+| Gateway | POST /appointments | `{clinic_name, clinic_id?, specialty?, appointment_type?, reason?, preferred_date?, preferred_time?, notes?}` (auth) | `{id, ...appointment}` |
+| Gateway | PUT /appointments/{id} | `{clinic_name?, status?, ...}` (auth) | `{id, ...appointment}` |
+| Gateway | DELETE /appointments/{id} | (auth required) | 204 No Content |
+| Gateway | GET /appointments/clinics | `?state=&specialty=&type=&q=` (no auth, proxies to Knowledge) | `{clinics: [...], total}` |
+
+## Chat Locale
+
+- `POST /chat` accepts optional `locale` field: `"en" | "pcm" | "ha" | "yo" | "ig"`. Defaults to `"en"` if omitted or invalid.
+- Orchestrator adds `context["locale"]` for all agents.
+- Agents pass `locale` to LLM gateway `POST /v1/complete` for locale-aware responses.
+- `discourse.py` provides `t(key, locale)` helper for translated discourse templates (triage, herbal, appointment, error strings).
+- LLM gateway prepends a system prompt instructing the model to respond in the specified language (via `LOCALE_INSTRUCTIONS`).
 
 ## Patient Data
 
 - Gateway GET `/patient/{id}` proxies to FHIR `GET /Patient/{id}`.
+- Gateway GET `/patient/{id}/observations` proxies to FHIR `GET /Observation?patient={id}`.
+- Gateway GET `/patient/{id}/medications` proxies to FHIR `GET /MedicationRequest?patient={id}`.
+- Gateway GET `/patient/{id}/reports` proxies to FHIR `GET /DiagnosticReport?patient={id}`.
+- All patient routes require authentication (`require_auth`).
 - Chat request accepts `patient_id`; passed to agent context.
 
 ## New Integrations

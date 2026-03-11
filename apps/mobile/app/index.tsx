@@ -1,23 +1,76 @@
-import { Link, Stack } from "expo-router";
+import { Link } from "expo-router";
 import { Text, View, StyleSheet, Pressable } from "react-native";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "../lib/AuthContext";
+import { LanguagePicker } from "../components/LanguagePicker";
+import { theme } from "../lib/theme";
+import { hapticNudge } from "../lib/haptics";
+
+const { colors, spacing, radius } = theme;
 
 export default function HomeScreen() {
+  const { t } = useTranslation();
+  const { user, signOut, loading } = useAuth();
+
   return (
-    <>
-      <Stack.Screen options={{ title: "NurseAda" }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>NurseAda</Text>
-        <Text style={styles.subtitle}>
-          Your 24/7 AI health assistant. Symptom guidance, medications, and
-          support in English and local languages.
-        </Text>
-        <Link href="/chat" asChild>
-          <Pressable style={styles.button}>
-            <Text style={styles.buttonText}>Start chat</Text>
-          </Pressable>
-        </Link>
+    <View style={styles.container}>
+      <Text style={styles.title}>{t("meta.appName")}</Text>
+      <Text style={styles.subtitle}>{t("home.subtitle")}</Text>
+      <Link href="/chat" asChild>
+        <Pressable
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+          onPressIn={() => void hapticNudge()}
+        >
+          <Text style={styles.buttonText}>{t("home.startChat")}</Text>
+        </Pressable>
+      </Link>
+      <Link href="/remedies" asChild>
+        <Pressable style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}>
+          <Text style={styles.secondaryButtonText}>{t("remedies.title")}</Text>
+        </Pressable>
+      </Link>
+      <Link href="/medications" asChild>
+        <Pressable style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}>
+          <Text style={styles.secondaryButtonText}>{t("home.medications")}</Text>
+        </Pressable>
+      </Link>
+      <Link href="/appointments" asChild>
+        <Pressable style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}>
+          <Text style={styles.secondaryButtonText}>{t("home.appointments")}</Text>
+        </Pressable>
+      </Link>
+
+      {!loading && (
+        <View style={styles.authRow}>
+          {user ? (
+            <>
+              <Text style={styles.authEmail} numberOfLines={1}>
+                {user.email}
+              </Text>
+              <Pressable onPress={() => void signOut()}>
+                <Text style={styles.authLink}>{t("common.signOut")}</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <Link href="/sign-in" asChild>
+                <Pressable style={({ pressed }) => pressed && styles.buttonPressed}>
+                  <Text style={styles.authLink}>{t("common.signIn")}</Text>
+                </Pressable>
+              </Link>
+              <Link href="/sign-up" asChild>
+                <Pressable style={({ pressed }) => pressed && styles.buttonPressed}>
+                  <Text style={styles.authLinkBold}>{t("common.signUp")}</Text>
+                </Pressable>
+              </Link>
+            </>
+          )}
+        </View>
+      )}
+      <View>
+        <LanguagePicker />
       </View>
-    </>
+    </View>
   );
 }
 
@@ -26,29 +79,67 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 24,
+    padding: spacing.xl,
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#0f172a",
-    marginBottom: 8,
+    color: colors.fg,
+    marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 16,
-    color: "#64748b",
+    color: colors.muted,
     textAlign: "center",
-    marginBottom: 32,
-    paddingHorizontal: 16,
+    marginBottom: spacing.xxl,
+    paddingHorizontal: spacing.lg,
   },
   button: {
-    backgroundColor: "#059669",
-    paddingHorizontal: 24,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: radius.card,
+    minHeight: 44,
   },
   buttonText: {
     color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  buttonPressed: {
+    opacity: 0.85,
+  },
+  authRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+    marginTop: 28,
+  },
+  authEmail: {
+    fontSize: 13,
+    color: colors.muted,
+    maxWidth: 180,
+  },
+  authLink: {
+    fontSize: 14,
+    color: colors.primary,
+  },
+  authLinkBold: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    marginTop: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: 14,
+    borderRadius: radius.card,
+    minHeight: 44,
+  },
+  secondaryButtonText: {
+    color: colors.primary,
     fontSize: 16,
     fontWeight: "600",
   },

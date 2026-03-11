@@ -85,6 +85,8 @@ class GeneralAgent(BaseAgent):
                 agent_id=self.agent_id,
             )
 
+        locale = context.get("locale", "en")
+
         messages = [{"role": m.get("role", "user"), "content": m.get("content", m.get("text", ""))} for m in history]
         messages.append({"role": "user", "content": user_message})
         if extra_context:
@@ -94,7 +96,7 @@ class GeneralAgent(BaseAgent):
             async with httpx.AsyncClient() as client:
                 r = await client.post(
                     f"{GATEWAY_LLM_URL.rstrip('/')}/v1/complete",
-                    json={"messages": messages, "max_tokens": 1024},
+                    json={"messages": messages, "max_tokens": 1024, "locale": locale},
                     timeout=30.0,
                 )
                 if r.status_code == 200:

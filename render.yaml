@@ -1,0 +1,83 @@
+# Render Blueprint – deploy all NurseAda services with one click.
+# https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Push this repo to GitHub.
+#   2. In Render dashboard → New Blueprint Instance → select the repo.
+#   3. Create an environment group called "nurseada-secrets" with:
+#        OPENAI_API_KEY, SUPABASE_URL, SUPABASE_ANON_KEY,
+#        SUPABASE_JWT_SECRET, SUPABASE_SERVICE_ROLE_KEY,
+#        FHIR_BASE_URL (optional)
+#   4. Deploy.
+
+services:
+  # ── Gateway (public) ──────────────────────────────────────────────
+  - type: web
+    name: nurseada-gateway
+    runtime: docker
+    dockerfilePath: ./services/gateway/Dockerfile
+    dockerContext: ./services/gateway
+    healthCheckPath: /health
+    envVars:
+      - key: GATEWAY_FHIR_URL
+        value: http://nurseada-fhir-adapter:8011
+      - key: GATEWAY_LLM_URL
+        value: http://nurseada-llm-gateway:8001
+      - key: GATEWAY_CDSS_URL
+        value: http://nurseada-cdss:8002
+      - key: GATEWAY_KNOWLEDGE_URL
+        value: http://nurseada-knowledge:8003
+      - key: GATEWAY_XAI_URL
+        value: http://nurseada-xai:8012
+      - key: CORS_ALLOW_ORIGINS
+        value: https://nurseada.vercel.app,https://nurseada.com
+      - fromGroup: nurseada-secrets
+
+  # ── LLM Gateway (private) ─────────────────────────────────────────
+  - type: pserv
+    name: nurseada-llm-gateway
+    runtime: docker
+    dockerfilePath: ./services/llm-gateway/Dockerfile
+    dockerContext: ./services/llm-gateway
+    envVars:
+      - fromGroup: nurseada-secrets
+
+  # ── CDSS (private) ────────────────────────────────────────────────
+  - type: pserv
+    name: nurseada-cdss
+    runtime: docker
+    dockerfilePath: ./services/cdss/Dockerfile
+    dockerContext: ./services/cdss
+
+  # ── Knowledge (private) ───────────────────────────────────────────
+  - type: pserv
+    name: nurseada-knowledge
+    runtime: docker
+    dockerfilePath: ./services/knowledge/Dockerfile
+    dockerContext: ./services/knowledge
+
+  # ── XAI (private) ─────────────────────────────────────────────────
+  - type: pserv
+    name: nurseada-xai
+    runtime: docker
+    dockerfilePath: ./services/xai/Dockerfile
+    dockerContext: ./services/xai
+
+  # ── FHIR Adapter (private) ────────────────────────────────────────
+  - type: pserv
+    name: nurseada-fhir-adapter
+    runtime: docker
+    dockerfilePath: ./services/fhir-adapter/Dockerfile
+    dockerContext: ./services/fhir-adapter
+    envVars:
+      - fromGroup: nurseada-secrets
+
+  # ── USSD Bridge (private) ─────────────────────────────────────────
+  - type: pserv
+    name: nurseada-ussd
+    runtime: docker
+    dockerfilePath: ./services/ussd/Dockerfile
+    dockerContext: ./services/ussd
+    envVars:
+      - key: GATEWAY_URL
+        value: http://nurseada-gateway:8000

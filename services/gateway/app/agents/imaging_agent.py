@@ -1,11 +1,14 @@
 """
-Imaging agent: medical image analysis via XAI (saliency, heatmaps).
-Placeholder for radiology AI; wires to XAI saliency endpoint.
+Imaging agent: medical image analysis via LLM vision (primary) and XAI
+saliency (supplementary).  Falls back gracefully when services are unavailable.
 """
+from __future__ import annotations
+
 import httpx
 from app.agents.base import BaseAgent, AgentResult
-from app.config import GATEWAY_XAI_URL
+from app.config import GATEWAY_LLM_URL, GATEWAY_XAI_URL
 from app.services.verification import get_standard_disclaimer
+from app.services.discourse import t as discourse_t
 
 
 class ImagingAgent(BaseAgent):
@@ -15,7 +18,55 @@ class ImagingAgent(BaseAgent):
 
     @property
     def description(self) -> str:
-        return "Medical image analysis (X-ray, CT, MRI) with saliency/heatmap support"
+        return "Medical image analysis (X-ray, CT, MRI, skin, wound) via LLM vision"
+
+    # ── helpers ───────────────────────────────────────────────────────
+
+    async def _call_llm_vision(
+        self, image_base64: str, prompt: str
+    ) -> str | None:
+        """Call the LLM gateway /v1/vision endpoint.  Returns the analysis
+        text or None on failure."""
+        if not GATEWAY_LLM_URL:
+            return None
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    f"{GATEWAY_LLM_URL.rstrip('/')}/v1/vision",
+                    json={"image_base64": image_base64, "prompt": prompt},
+                    timeout=30.0,
+                )
+                if r.status_code == 200:
+                    return r.json().get("content")
+        except Exception:
+            pass
+        return None
+
+    async def _call_xai_saliency(
+        self, image_base64: str
+    ) -> dict | None:
+        """Call the XAI saliency endpoint for a supplementary heatmap."""
+        if not GATEWAY_XAI_URL:
+            return None
+        image_url = (
+            image_base64
+            if "base64," in image_base64
+            else f"data:image/png;base64,{image_base64}"
+        )
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.post(
+                    f"{GATEWAY_XAI_URL.rstrip('/')}/visualize/saliency",
+                    json={"image_url": image_url, "features": None},
+                    timeout=15.0,
+                )
+                if r.status_code == 200:
+                    return r.json()
+        except Exception:
+            pass
+        return None
+
+    # ── main execution ───────────────────────────────────────────────
 
     async def execute(
         self,
@@ -23,56 +74,50 @@ class ImagingAgent(BaseAgent):
         context: dict | None = None,
     ) -> AgentResult:
         context = context or {}
-        image_url = context.get("image_url")
-        image_base64 = context.get("image_base64")
-        if image_base64 and not image_url:
-            image_url = f"data:image/png;base64,{image_base64}" if "base64," not in image_base64 else image_base64
+        locale = context.get("locale", "en")
+        image_base64: str | None = context.get("image_base64") or context.get("image_url")
 
-        if not GATEWAY_XAI_URL:
+        if not image_base64:
             return AgentResult(
-                content="Medical imaging analysis is not configured. For image interpretation, please share your scan with a radiologist or healthcare provider."
+                content=discourse_t("could_not_match", locale)
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
                 sources=[],
             )
 
-        # XAI saliency endpoint accepts image_url or features
-        try:
-            async with httpx.AsyncClient() as client:
-                r = await client.post(
-                    f"{GATEWAY_XAI_URL.rstrip('/')}/visualize/saliency",
-                    json={
-                        "image_url": image_url,
-                        "features": None,
-                    },
-                    timeout=15.0,
-                )
-                if r.status_code == 200:
-                    data = r.json()
-                    if data.get("type") == "saliency_radiology" and data.get("status") == "placeholder":
-                        msg = data.get("message", "Radiology saliency requires a trained vision model.")
-                        return AgentResult(
-                            content=f"**Imaging analysis**\n\n{msg}\n\nFor X-ray, CT, or MRI interpretation, please consult a radiologist or your healthcare provider. This tool provides symptom heatmaps for triage when you describe symptoms in text."
-                            + get_standard_disclaimer(),
-                            agent_id=self.agent_id,
-                            sources=["XAI"],
-                            metadata=data,
-                        )
-                    # Tabular/symptom heatmap
-                    desc = data.get("description", "")
-                    return AgentResult(
-                        content=f"**Imaging/saliency output**\n\n{desc}\n\nUse the symptom checker to get feature importance for your described symptoms."
-                        + get_standard_disclaimer(),
-                        agent_id=self.agent_id,
-                        sources=["XAI"],
-                        metadata=data,
-                    )
-        except Exception:
-            pass
+        prompt = user_message or "Analyze this medical image."
+        sources: list[str] = []
+        sections: list[str] = []
 
+        # 1) Primary: LLM vision analysis
+        vision_text = await self._call_llm_vision(image_base64, prompt)
+        if vision_text:
+            sections.append(f"**Image analysis**\n\n{vision_text}")
+            sources.append("LLM Vision")
+
+        # 2) Supplementary: XAI saliency (non-blocking)
+        xai_data = await self._call_xai_saliency(image_base64)
+        xai_meta = None
+        if xai_data:
+            xai_meta = xai_data
+            if xai_data.get("type") == "saliency_radiology" and xai_data.get("status") != "placeholder":
+                desc = xai_data.get("description", "")
+                if desc:
+                    sections.append(f"**Saliency map**\n\n{desc}")
+                    sources.append("XAI")
+
+        if not sections:
+            return AgentResult(
+                content=discourse_t("could_not_process", locale)
+                + get_standard_disclaimer(),
+                agent_id=self.agent_id,
+                sources=[],
+            )
+
+        body = "\n\n---\n\n".join(sections)
         return AgentResult(
-            content="I couldn't complete the imaging analysis right now. For scan interpretation, please consult a radiologist or healthcare provider."
-            + get_standard_disclaimer(),
+            content=body + get_standard_disclaimer(),
             agent_id=self.agent_id,
-            sources=[],
+            sources=sources,
+            metadata=xai_meta,
         )

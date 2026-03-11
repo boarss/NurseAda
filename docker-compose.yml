@@ -1,7 +1,12 @@
-# NurseAda – local dev. Run: docker-compose up --build
+# NurseAda – Docker Compose
+#
+# Dev:        docker compose up --build
+# Production: docker compose --profile production up -d
+#
 # Web app: npm run dev in apps/web (uses NEXT_PUBLIC_GATEWAY_URL=http://localhost:8000)
 
 services:
+  # ── Development (default) ──────────────────────────────────────────
   gateway:
     build:
       context: ./services/gateway
@@ -63,3 +68,103 @@ services:
       - "8010:8010"
     environment:
       - GATEWAY_URL=http://gateway:8000
+
+  # ── Production profile ─────────────────────────────────────────────
+  # Activate with: docker compose --profile production up -d
+  # Requires .env file at project root with all secrets.
+  gateway-prod:
+    profiles: ["production"]
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - GATEWAY_FHIR_URL=http://fhir-adapter-prod:8011
+      - GATEWAY_LLM_URL=http://llm-gateway-prod:8001
+      - GATEWAY_CDSS_URL=http://cdss-prod:8002
+      - GATEWAY_KNOWLEDGE_URL=http://knowledge-prod:8003
+      - GATEWAY_XAI_URL=http://xai-prod:8012
+    restart: always
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  fhir-adapter-prod:
+    profiles: ["production"]
+    build:
+      context: ./services/fhir-adapter
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  llm-gateway-prod:
+    profiles: ["production"]
+    build:
+      context: ./services/llm-gateway
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  cdss-prod:
+    profiles: ["production"]
+    build:
+      context: ./services/cdss
+      dockerfile: Dockerfile
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  knowledge-prod:
+    profiles: ["production"]
+    build:
+      context: ./services/knowledge
+      dockerfile: Dockerfile
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  xai-prod:
+    profiles: ["production"]
+    build:
+      context: ./services/xai
+      dockerfile: Dockerfile
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  ussd-prod:
+    profiles: ["production"]
+    build:
+      context: ./services/ussd
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      - GATEWAY_URL=http://gateway-prod:8000
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256M

@@ -18,6 +18,10 @@ CLINICAL_DISCLAIMER_SUBSTRINGS = [
     "emergency",
 ]
 
+# Simple PII patterns (emails, phone numbers). This is a conservative first pass.
+EMAIL_PATTERN = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.I)
+PHONE_PATTERN = re.compile(r"\+?\d[\d\-\s]{7,}\d")
+
 
 @dataclass
 class VerificationResult:
@@ -38,6 +42,12 @@ def verify_agent_input(user_message: str, agent_id: str) -> VerificationResult:
     # Basic injection / prompt-leak mitigation: reject obvious placeholder or script patterns
     if re.search(r"<\s*script|javascript:|{\s*{\s*", text, re.I):
         return VerificationResult(False, "Invalid input pattern")
+    # Gently block obvious PII that is not needed for clinical triage
+    if EMAIL_PATTERN.search(text) or PHONE_PATTERN.search(text):
+        return VerificationResult(
+            False,
+            "I'd like to help, but please avoid sharing phone numbers or email addresses. You can describe your symptoms or question without those details.",
+        )
     return VerificationResult(True)
 
 
@@ -56,7 +66,7 @@ def verify_agent_output(
     if len(text) > MAX_OUTPUT_LENGTH:
         return VerificationResult(False, f"Output exceeds max length ({MAX_OUTPUT_LENGTH})")
     # For clinical agents, require a disclaimer (or we will append one in orchestrator)
-    if require_clinical_disclaimer and agent_id in ("triage", "medication", "lab", "emergency"):
+    if require_clinical_disclaimer and agent_id in ("triage", "medication", "lab", "emergency", "herbal", "appointment"):
         has_disclaimer = any(
             sub.lower() in text.lower() for sub in CLINICAL_DISCLAIMER_SUBSTRINGS
         )

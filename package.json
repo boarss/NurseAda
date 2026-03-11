@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "pinecone:recommendations": "npx tsx scripts/pinecone-recommendations.ts",
     "dev": "npm run dev --workspace=apps/web",
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:mobile": "npm run start --workspace=apps/mobile",
@@ -16,5 +17,13 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@pinecone-database/pinecone": "^7.1.0",
+    "openai": "^6.27.0"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.0",
+    "tsx": "^4.19.0"
   }
 }

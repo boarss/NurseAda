@@ -1,24 +1,18 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { sendChatMessage } from "@/lib/api";
-
-const SUGGESTED_PROMPTS = [
-  "I have a headache",
-  "I feel feverish and tired",
-  "Can I take paracetamol with ibuprofen?",
-  "What should I do for a cough?",
-  "I have ketones and high blood sugar",
-  "What is DKA?",
-  "Analyze this X-ray image",
-  "Any herbal remedies for nausea?",
-];
+import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+import { sendChatMessage, sendFeedback, getPatient, type PatientSummary } from "@/lib/api";
+import { useAuth } from "@/lib/AuthContext";
+import { useLocale } from "@/lib/IntlProvider";
+import { LanguagePicker } from "@/components/LanguagePicker";
 
 function MessageContent({ text }: { text: string }) {
   // Split disclaimer (common suffix) for visual separation
   const disclaimerMatch = text.match(
-    /\n\n(?:This is (?:general information|not a substitute)|Consult a healthcare).+$/s
+    /\n\n(?:This is (?:general information|not a substitute)|Consult a healthcare)[\s\S]+$/
   );
   const mainText = disclaimerMatch ? text.slice(0, disclaimerMatch.index) : text;
   const disclaimer = disclaimerMatch ? disclaimerMatch[0].trim() : null;
@@ -80,28 +74,68 @@ function MessageContent({ text }: { text: string }) {
   );
 }
 
+type ChatMsg = {
+  role: "user" | "assistant";
+  text: string;
+  imageDataUrl?: string | null;
+};
+
 export default function ChatPage() {
+  const t = useTranslations();
+  const { user, signOut, accessToken } = useAuth();
+  const { locale } = useLocale();
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<
-    { role: "user" | "assistant"; text: string; hadImage?: boolean }[]
-  >([]);
+
+  const suggestedPrompts = [
+    t("chat.promptHeadache"),
+    t("chat.promptFever"),
+    t("chat.promptDrugCombo"),
+    t("chat.promptCough"),
+    t("chat.promptDka"),
+    t("chat.promptXray"),
+    t("chat.promptHerbalNausea"),
+    t("chat.promptJointPain"),
+    t("chat.promptPregnancy"),
+    t("chat.promptClinic"),
+    t("chat.promptAppointment"),
+  ];
+  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [lastReplyIndex, setLastReplyIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [patientId, setPatientId] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
+  const [patientSummary, setPatientSummary] = useState<PatientSummary | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const id = patientId.trim();
+    if (!id || !accessToken) {
+      setPatientSummary(null);
+      return;
+    }
+    const timeout = setTimeout(() => {
+      getPatient(id, accessToken)
+        .then(setPatientSummary)
+        .catch(() => setPatientSummary(null));
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [patientId, accessToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userText = message.trim() || (imageBase64 ? "Analyze this image" : "");
+    const userText = message.trim() || (imageBase64 ? t("chat.analyzeImage") : "");
     if (!userText || loading) return;
     const imageToSend = imageBase64;
+    const imagePreview = imageDataUrl;
     setMessage("");
     setError(null);
     setImageBase64(null);
+    setImageDataUrl(null);
     setMessages((prev) => [
       ...prev,
-      { role: "user", text: userText, hadImage: !!imageToSend },
+      { role: "user", text: userText, imageDataUrl: imagePreview },
     ]);
     setLoading(true);
     try {
@@ -116,18 +150,22 @@ export default function ChatPage() {
       const { reply } = await sendChatMessage(nextMessages, {
         patientId: patientId || undefined,
         imageBase64: imageToSend || undefined,
+        token: accessToken,
+        locale,
       });
-      setMessages((prev) => [...prev, { role: "assistant", text: reply }]);
+      setMessages((prev) => {
+        const next = [...prev, { role: "assistant", text: reply } as ChatMsg];
+        setLastReplyIndex(next.length - 1);
+        return next;
+      });
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : "Something went wrong.";
       setError(msg);
+      toast.error(msg);
       setMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          text: "I couldn't reach the server. Check that the gateway is running and the URL in .env.local is correct.",
-        },
+        { role: "assistant", text: t("chat.serverError") } as ChatMsg,
       ]);
     } finally {
       setLoading(false);
@@ -144,6 +182,7 @@ export default function ChatPage() {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
+      setImageDataUrl(result);
       const base64 = result.includes(",") ? result.split(",")[1] : result;
       setImageBase64(base64);
     };
@@ -153,28 +192,108 @@ export default function ChatPage() {
 
   return (
     <main className="min-h-screen flex flex-col max-w-2xl mx-auto w-full">
-      <header className="sticky top-0 z-10 flex items-center gap-4 px-4 py-3 bg-bg/90 backdrop-blur-md border-b border-border">
+      <header className="sticky top-0 z-10 flex flex-wrap items-center gap-2 sm:gap-4 px-4 py-3 bg-bg/90 backdrop-blur-md border-b border-border">
         <Link
           href="/"
           className="rounded-lg p-2 -ml-2 text-muted hover:text-fg hover:bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg"
-          aria-label="Back to home"
+          aria-label={t("common.backToHome")}
         >
-          <span className="font-body font-medium">←</span>
+          <span className="font-body font-medium">&larr;</span>
         </Link>
         <h1 className="font-display text-xl font-semibold text-fg">
-          Chat with NurseAda
+          {t("chat.title")}
         </h1>
+        <Link
+          href="/remedies"
+          className="rounded-card border border-border bg-surface px-2.5 py-1.5 text-xs text-primary hover:bg-primary/10 font-body font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+          title="Browse herbal remedies"
+        >
+          {t("chat.remedies")}
+        </Link>
+        <Link
+          href="/medications"
+          className="rounded-card border border-border bg-surface px-2.5 py-1.5 text-xs text-primary hover:bg-primary/10 font-body font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+          title="Medication reminders and interactions"
+        >
+          {t("chat.medications")}
+        </Link>
+        <Link
+          href="/appointments"
+          className="rounded-card border border-border bg-surface px-2.5 py-1.5 text-xs text-primary hover:bg-primary/10 font-body font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+          title="Find clinics and book appointments"
+        >
+          {t("chat.appointments")}
+        </Link>
+        <LanguagePicker />
         <div className="ml-auto flex items-center gap-2">
-          <input
-            type="text"
-            value={patientId}
-            onChange={(e) => setPatientId(e.target.value)}
-            placeholder="Patient ID (optional)"
-            className="w-28 rounded-card border border-border bg-surface text-fg placeholder:text-muted px-2 py-1.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Patient ID for EHR context"
-          />
+          {user ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={patientId}
+                onChange={(e) => setPatientId(e.target.value)}
+                placeholder={t("chat.patientId")}
+                className="w-28 rounded-card border border-border bg-surface text-fg placeholder:text-muted px-2 py-1.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary"
+                aria-label={t("chat.patientIdLabel")}
+              />
+              {patientId.trim() && (
+                <Link
+                  href={`/patient/${encodeURIComponent(patientId.trim())}`}
+                  className="rounded-card border border-border bg-surface px-2 py-1.5 text-xs text-primary hover:bg-primary/10 font-body transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                  title={t("chat.viewProfile")}
+                >
+                  {t("common.profile")}
+                </Link>
+              )}
+            </div>
+          ) : (
+            <span className="text-xs text-muted font-body">{t("common.guest")}</span>
+          )}
+          {user ? (
+            <>
+              <span className="hidden sm:inline text-xs text-muted font-body truncate max-w-[120px]">
+                {user.email}
+              </span>
+              <button
+                type="button"
+                onClick={() => void signOut()}
+                className="rounded-card border border-border bg-surface px-2 py-1.5 text-xs text-muted hover:text-fg font-body transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {t("common.signOut")}
+              </button>
+            </>
+          ) : (
+            <Link
+              href="/auth/sign-in"
+              className="rounded-card bg-primary text-white px-3 py-1.5 text-xs font-body font-medium transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {t("common.signIn")}
+            </Link>
+          )}
         </div>
       </header>
+
+      {patientSummary && (
+        <div className="px-4 py-2 bg-primary/5 border-b border-border flex items-center gap-2 text-sm font-body">
+          <span className="text-primary font-semibold">{t("chat.patient")}</span>
+          <span className="text-fg">
+            {(() => {
+              const n = patientSummary.name?.[0];
+              const given = n?.given?.join(" ") ?? "";
+              const name = [given, n?.family].filter(Boolean).join(" ") || patientSummary.id || "";
+              const parts = [name];
+              if (patientSummary.birthDate) {
+                const yrs = Math.floor(
+                  (Date.now() - new Date(patientSummary.birthDate).getTime()) / 31_557_600_000
+                );
+                parts.push(`${yrs}y`);
+              }
+              if (patientSummary.gender) parts.push(patientSummary.gender);
+              return parts.join(", ");
+            })()}
+          </span>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {error && (
@@ -188,21 +307,19 @@ export default function ChatPage() {
         {messages.length === 0 && !error && (
           <div className="space-y-4">
             <p className="font-body text-muted text-sm leading-relaxed max-w-md">
-              Describe your symptoms, ask about medications, or get general
-              health guidance. In an emergency, call 112 or seek care
-              immediately.
+              {t("chat.emptyState")}
             </p>
             <div>
               <p className="font-body text-muted text-xs mb-2">
-                Try one of these:
+                {t("chat.tryThese")}
               </p>
               <div className="flex flex-wrap gap-2">
-                {SUGGESTED_PROMPTS.map((prompt) => (
+                {suggestedPrompts.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
                     onClick={() => handleSuggestedPrompt(prompt)}
-                    className="rounded-card border border-border bg-surface hover:bg-bubble-assistant/50 text-fg px-3 py-2 text-sm font-body transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="rounded-card border border-border bg-surface hover:bg-bubble-assistant/50 text-fg px-3 py-2.5 min-h-[44px] text-sm font-body transition-transform duration-fast ease-out-expo focus:outline-none focus:ring-2 focus:ring-primary active:scale-[0.98] touch-manipulation"
                   >
                     {prompt}
                   </button>
@@ -223,15 +340,48 @@ export default function ChatPage() {
             >
               {m.role === "user" ? (
                 <div className="space-y-2">
+                  {m.imageDataUrl && (
+                    <img
+                      src={m.imageDataUrl}
+                      alt={t("chat.attachedMedicalImage")}
+                      className="rounded-lg max-h-[160px] max-w-full object-contain border border-white/20"
+                    />
+                  )}
                   <p className="font-body text-[15px] leading-relaxed whitespace-pre-wrap">
                     {m.text}
                   </p>
-                  {m.hadImage && (
-                    <p className="text-xs opacity-80">📷 Image attached</p>
-                  )}
                 </div>
               ) : (
-                <MessageContent text={m.text} />
+                <>
+                  <MessageContent text={m.text} />
+                  {lastReplyIndex === i && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+                      <span>{t("chat.wasHelpful")}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void sendFeedback({ rating: 1, token: accessToken });
+                          setLastReplyIndex(null);
+                        }}
+                        className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                        aria-label="Thumbs up"
+                      >
+                        👍
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void sendFeedback({ rating: -1, token: accessToken });
+                          setLastReplyIndex(null);
+                        }}
+                        className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                        aria-label="Thumbs down"
+                      >
+                        👎
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ))}
@@ -247,16 +397,23 @@ export default function ChatPage() {
         </div>
       </div>
 
-      <div className="sticky bottom-0 border-t border-border bg-bg/95 backdrop-blur-md p-4">
+      <div className="sticky bottom-0 border-t border-border bg-bg/95 backdrop-blur-md p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {imageBase64 && (
-          <div className="mb-2 flex items-center gap-2 text-sm text-muted">
-            <span>📷 Image attached</span>
+          <div className="mb-2 flex items-center gap-3">
+            {imageDataUrl && (
+              <img
+                src={imageDataUrl}
+                alt={t("chat.preview")}
+                className="h-14 w-14 rounded-lg object-cover border border-border"
+              />
+            )}
+            <span className="text-sm text-muted font-body">{t("chat.imageAttached")}</span>
             <button
               type="button"
-              onClick={() => setImageBase64(null)}
-              className="text-error hover:underline"
+              onClick={() => { setImageBase64(null); setImageDataUrl(null); }}
+              className="text-error text-sm hover:underline font-body"
             >
-              Remove
+              {t("common.remove")}
             </button>
           </div>
         )}
@@ -276,7 +433,7 @@ export default function ChatPage() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             className="rounded-card border border-border bg-surface p-3 text-muted hover:text-fg transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-            aria-label="Attach image"
+            aria-label={t("chat.attachImage")}
           >
             📷
           </button>
@@ -284,16 +441,16 @@ export default function ChatPage() {
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Describe your symptoms or ask a health question..."
+            placeholder={t("chat.placeholder")}
             className="flex-1 rounded-card border border-border bg-surface text-fg placeholder:text-muted px-4 py-3 font-body text-[15px] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-            aria-label="Chat message"
+            aria-label={t("chat.placeholder")}
           />
           <button
             type="submit"
             disabled={loading || (!message.trim() && !imageBase64)}
-            className="rounded-card bg-primary text-white font-body font-semibold px-5 py-3 min-w-[5rem] transition-all duration-200 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg active:scale-[0.98]"
+            className="rounded-card bg-primary text-white font-body font-semibold px-5 py-3 min-h-[44px] min-w-[5rem] transition-transform duration-fast ease-out-expo hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg active:scale-[0.98] touch-manipulation"
           >
-            {loading ? "…" : "Send"}
+            {loading ? "…" : t("common.send")}
           </button>
         </form>
       </div>

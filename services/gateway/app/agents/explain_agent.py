@@ -6,6 +6,7 @@ import httpx
 from app.agents.base import BaseAgent, AgentResult
 from app.config import GATEWAY_XAI_URL
 from app.services.verification import get_standard_disclaimer
+from app.services.discourse import t as discourse_t
 
 
 def _symptoms_from_context(context: dict) -> dict:
@@ -35,11 +36,12 @@ class ExplainAgent(BaseAgent):
         context: dict | None = None,
     ) -> AgentResult:
         context = context or {}
+        locale = context.get("locale", "en")
         features = _symptoms_from_context(context)
 
         if not GATEWAY_XAI_URL:
             return AgentResult(
-                content="Explainability (XAI) is not configured. I can't show model transparency or SHAP/LIME explanations right now. You can ask your care provider to explain how a recommendation was reached."
+                content=discourse_t("could_not_process", locale)
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
             )
@@ -96,7 +98,7 @@ class ExplainAgent(BaseAgent):
                 parts.append("Symptom heatmap data is available from the XAI service (GET /visualize/symptom-heatmap with SHAP values). For radiology, saliency maps require an image and a vision model.")
         except Exception as e:
             return AgentResult(
-                content="I couldn't reach the explainability service. Please try again or ask your provider for an explanation of your recommendation."
+                content=discourse_t("something_went_wrong", locale)
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
             )

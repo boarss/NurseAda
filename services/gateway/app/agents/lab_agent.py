@@ -4,10 +4,8 @@ Lab agent: lab orders and results (FHIR DiagnosticReport/Observation + lab API).
 import httpx
 from app.agents.base import BaseAgent, AgentResult
 from app.config import GATEWAY_FHIR_URL, LAB_API_URL
-
-
-def get_standard_disclaimer() -> str:
-    return "\n\nThis is not a substitute for professional medical advice. Lab results should be interpreted by a healthcare provider. In an emergency, seek care immediately."
+from app.services.verification import get_standard_disclaimer
+from app.services.discourse import t as discourse_t
 
 
 class LabAgent(BaseAgent):
@@ -26,6 +24,7 @@ class LabAgent(BaseAgent):
     ) -> AgentResult:
         context = context or {}
         patient_id = context.get("patient_id")
+        locale = context.get("locale", "en")
         # Optional: recent results from FHIR (Observation + DiagnosticReport per HL7 FHIR spec)
         fhir_note = ""
         if patient_id and GATEWAY_FHIR_URL:
@@ -41,7 +40,7 @@ class LabAgent(BaseAgent):
 
         if not LAB_API_URL:
             return AgentResult(
-                content="Lab integration is not configured. For lab orders and results, please contact your clinic or lab directly."
+                content=discourse_t("could_not_process", locale)
                 + fhir_note
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
@@ -67,7 +66,7 @@ class LabAgent(BaseAgent):
             pass
 
         return AgentResult(
-            content="I couldn't fetch lab information right now. Please contact your lab or healthcare provider."
+            content=discourse_t("something_went_wrong", locale)
             + fhir_note
             + get_standard_disclaimer(),
             agent_id=self.agent_id,

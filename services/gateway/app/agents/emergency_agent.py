@@ -4,13 +4,9 @@ Emergency agent: escalation to emergency services (FHIR Task / emergency API / h
 import httpx
 from app.agents.base import BaseAgent, AgentResult
 from app.config import EMERGENCY_API_URL, GATEWAY_FHIR_URL
+from app.services.verification import get_standard_disclaimer
+from app.services.discourse import t as discourse_t
 
-
-def get_standard_disclaimer() -> str:
-    return "\n\nIf you are in immediate danger, call emergency services or go to the nearest emergency department."
-
-
-# Default Nigeria emergency numbers (can be overridden by config)
 DEFAULT_EMERGENCY_MESSAGE = (
     "**Seek emergency care now.** "
     "Nigeria: Emergency line 112; Lagos State Emergency 767. "
@@ -34,6 +30,7 @@ class EmergencyAgent(BaseAgent):
     ) -> AgentResult:
         context = context or {}
         patient_id = context.get("patient_id")
+        locale = context.get("locale", "en")
 
         # Optionally create FHIR Task or alert (if FHIR server supports it)
         if patient_id and GATEWAY_FHIR_URL:
@@ -77,8 +74,9 @@ class EmergencyAgent(BaseAgent):
             except Exception:
                 pass
 
+        msg = discourse_t("emergency_ack", locale) + " " + DEFAULT_EMERGENCY_MESSAGE
         return AgentResult(
-            content=DEFAULT_EMERGENCY_MESSAGE + get_standard_disclaimer(),
+            content=msg + get_standard_disclaimer(),
             agent_id=self.agent_id,
             sources=[],
         )

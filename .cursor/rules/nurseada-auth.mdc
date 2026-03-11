@@ -1,0 +1,54 @@
+---
+description: NurseAda authentication rules – Supabase JWT, auth flows, PHI access control
+globs: services/gateway/**/*.py, apps/web/**/*.{ts,tsx}, apps/mobile/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# NurseAda Authentication
+
+## Provider
+
+Supabase Auth with email + password. All clients share the same Supabase project.
+
+## Backend (Gateway)
+
+- JWT validation lives in `services/gateway/app/services/auth.py`.
+- `get_current_user_optional` – returns `AuthUser | None`. Use for routes that work in guest mode (e.g. `/chat`).
+- `require_auth` – returns `AuthUser` or 401. Use for routes that expose PHI (e.g. `/patient/{id}`).
+- When `SUPABASE_JWT_SECRET` is unset, auth is disabled (local dev). Guest requests proceed without a token.
+
+## Client token injection
+
+All API helpers (`lib/api.ts` on both web and mobile) accept an optional `token` parameter. Pass `accessToken` from the `useAuth()` context.
+
+## Patient data access
+
+- Patient ID fields in chat are only sent when the user is authenticated.
+- The `/patient/{id}` route requires authentication; unauthenticated requests receive a clear 401 message.
+
+## RLHF & PII
+
+- The RLHF interaction hook records `has_user: bool` but never logs emails, names, or tokens.
+- `user_id` from Supabase is an opaque UUID – safe to log.
+
+## Error messages
+
+Auth-related errors must be actionable and empathetic:
+
+```
+401: "Please sign in to access this feature."
+401 (expired): "Your session has expired. Please sign in again."
+503 (not configured): "Authentication is not configured on this server."
+```
+
+## Env vars
+
+| Variable | Where | Purpose |
+|----------|-------|---------|
+| `SUPABASE_URL` | Gateway `.env` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Gateway `.env` | Supabase anon/public key |
+| `SUPABASE_JWT_SECRET` | Gateway `.env` | JWT secret for token verification |
+| `NEXT_PUBLIC_SUPABASE_URL` | Web `.env.local` | Supabase URL (browser) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Web `.env.local` | Supabase anon key (browser) |
+| `EXPO_PUBLIC_SUPABASE_URL` | Mobile `.env` | Supabase URL (Expo) |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Mobile `.env` | Supabase anon key (Expo) |

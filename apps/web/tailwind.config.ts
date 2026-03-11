@@ -31,6 +31,15 @@ const config: Config = {
       boxShadow: {
         card: "var(--shadow)",
       },
+      transitionDuration: {
+        fast: "var(--duration-fast)",
+        normal: "var(--duration-normal)",
+        slow: "var(--duration-slow)",
+      },
+      transitionTimingFunction: {
+        spring: "var(--ease-spring)",
+        "out-expo": "var(--ease-out-expo)",
+      },
     },
   },
   plugins: [],

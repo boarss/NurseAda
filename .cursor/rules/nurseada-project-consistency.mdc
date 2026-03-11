@@ -37,24 +37,92 @@ Recommendations:
 
 When adding triage rules to CDSS `triage_logic.py`, add matching rules to `services/gateway/app/services/fallback_triage.py` so users get advice when CDSS is not configured.
 
-## Patient Data
-
-- Chat accepts `patient_id` in request; pass to context for agents.
-- Triage, medication, lab, emergency agents use `patient_id` to pull FHIR Observation, MedicationRequest, DiagnosticReport when `GATEWAY_FHIR_URL` is set.
-- GET `/patient/{id}` proxies to FHIR for demography.
-
 ## Herbal/Natural Remedies
 
-- Herbal agent: route when user mentions herbal, natural remedy, traditional, bitter leaf, ginger, moringa, turmeric.
-- Triage enriches non-emergency responses with herbal options (complementary) when Knowledge is configured.
-- Herbal content in `services/knowledge/app/herbal_content.py`; retrieval via `/retrieve/herbal`.
-- Always frame as complementary to—not substitute for—conventional care.
+- Herbal agent: route when user mentions herbal, natural remedy, traditional, Nigerian herb names (dogonyaro, zobo, efirin, nchanwu, kanafuru, utazi, sawansop, ewuro, onugbu, etc.).
+- 22 evidence-based entries in `services/knowledge/app/herbal_content.py` with `evidence_level`, `contraindications`, `drug_interactions`, and `blocked_populations`.
+- `/retrieve/herbal` accepts `context` with `medications` list for drug-herb interaction checking and population safety filtering.
+- `GET /herbal/catalog` returns all remedies for browse pages (no auth required).
+- Herbal agent pulls patient medications from FHIR when `patient_id` is set and passes to knowledge service.
+- Responses include evidence badges, contraindication warnings, and drug-herb interaction alerts (critical/major/moderate/minor).
+- Triage enriches non-emergency responses with herbal options, passing medications context.
+- `verify_agent_output` includes "herbal" in clinical agents check.
+- Always frame as complementary to — not substitute for — conventional care.
+- Web has a `/remedies` browse page with search, condition filters, and evidence badges.
+- Mobile has a `remedies` screen accessible from the home screen.
+- Both chat UIs include herbal-specific suggested prompts.
+
+## Medication Management
+
+- Gateway exposes medication reminder CRUD at `/medications/reminders` (all require auth).
+- Reminders are persisted in Supabase `medication_reminders` table with RLS.
+- Gateway accesses Supabase via PostgREST using `SUPABASE_SERVICE_ROLE_KEY`.
+- `POST /medications/check-interactions` proxies to CDSS `/drug-interactions` for drug-drug interaction checks. No auth required (health education tool).
+- Web has `/medications` page with two tabs: My Reminders and Interaction Checker.
+- Mobile has `medications` screen with same functionality plus local push notifications via `expo-notifications`.
+- Reminders include: medication_name, dosage, frequency, reminder_times (JSONB array of "HH:MM"), start_date, end_date, is_active, notes.
+- Interaction checker accepts a list of drug names, returns severity-coded results (high/medium/low).
+- All medication responses include standard clinical disclaimer.
+- Navigation: Medications link on home page and chat header (both web and mobile).
+
+## Appointment Coordination
+
+- Appointment agent: route when user mentions appointment, book, schedule, find clinic/hospital, referral, telemedicine, see a doctor.
+- Routing order in orchestrator: AFTER imaging, BEFORE herbal.
+- Clinic directory: static seed data in `services/knowledge/app/clinic_content.py` (19 Nigerian facilities across Lagos, Oyo, FCT, Kano, Kaduna, Rivers, Enugu, Edo).
+- Knowledge service exposes `GET /clinics?state=&specialty=&type=&q=` (no auth, public directory).
+- Gateway exposes appointment CRUD at `/appointments` (all require auth) and clinic proxy at `/appointments/clinics` (no auth).
+- Appointments are persisted in Supabase `appointments` table with RLS.
+- Appointment fields: clinic_name, clinic_id, specialty, appointment_type (in_person/telemedicine), reason, preferred_date, preferred_time, status (requested/confirmed/cancelled/completed), severity, referral_agent, notes.
+- Appointments are "requests" — no actual booking integration; confirmation would come from an external system.
+- Triage enriches non-emergency responses with severity-based appointment follow-up: high → "see a doctor today", medium → "schedule a visit soon", low → "book a routine appointment if symptoms persist".
+- `verify_agent_output` includes "appointment" in clinical agents check.
+- Discourse templates: `APPOINTMENT_OPENING`, `APPOINTMENT_FOLLOWUP`, `APPOINTMENT_DISCLAIMER`, `format_clinic_list`, `format_appointment_followup`.
+- Web has `/appointments` page with three tabs: My Appointments, Find a Clinic, Book.
+- Mobile has `appointments` screen with same three-tab layout.
+- Navigation: Appointments link on home page and chat header (both web and mobile).
+- Chat suggested prompts include "Find a clinic near me" and "Book an appointment".
 
 ## Medical Imaging
 
 - Imaging agent: route when user attaches image or mentions xray, CT, MRI, radiology.
-- Context may include `image_base64` or `image_url`. Agent calls XAI `/visualize/saliency`.
-- Provide fallback when XAI not configured; direct users to radiologist for interpretation.
+- Context may include `image_base64` or `image_url`.
+- **Primary analysis**: Agent calls LLM gateway `POST /v1/vision` with GPT-4o vision for image interpretation.
+- **Supplementary**: Agent optionally calls XAI `/visualize/saliency` for heatmap data.
+- Provide fallback when neither LLM nor XAI are configured; direct users to radiologist.
+- Web and mobile chat both support image upload with preview thumbnails in message bubbles.
+
+## Patient Data
+
+- Chat accepts `patient_id` in request; pass to context for agents.
+- Triage, medication, lab, emergency agents use `patient_id` to pull FHIR Observation, MedicationRequest, DiagnosticReport when `GATEWAY_FHIR_URL` is set.
+- Gateway exposes patient data routes (all require auth):
+  - `GET /patient/{id}` — demographics (FHIR Patient)
+  - `GET /patient/{id}/observations` — vitals and lab values (FHIR Observation)
+  - `GET /patient/{id}/medications` — prescriptions (FHIR MedicationRequest)
+  - `GET /patient/{id}/reports` — diagnostic reports (FHIR DiagnosticReport)
+- Web has a patient profile page at `/patient/[id]` with tabbed views for observations, medications, and reports.
+- Mobile has a patient profile screen at `/patient?id={id}`.
+- When a patient ID is entered in chat (authenticated), a summary banner auto-fetches and displays patient name, age, and gender.
+
+## Localisation (i18n)
+
+- **Supported languages**: English (`en`), Nigerian Pidgin (`pcm`), Hausa (`ha`), Yoruba (`yo`), Igbo (`ig`).
+- **Translation files**: `packages/locales/{en,pcm,ha,yo,ig}.json` — nested JSON with namespaces: common, home, chat, remedies, medications, appointments, auth, patient, language, meta, disclaimer.
+- **Web i18n**: `next-intl` with `NextIntlClientProvider` at layout level. Use `useTranslations()` hook. Locale stored in `localStorage` via `lib/locale.ts`. Provider in `lib/IntlProvider.tsx` exposes `useLocale()` for get/set.
+- **Mobile i18n**: `i18next` + `react-i18next`. Config in `apps/mobile/lib/i18n.ts`. Uses `expo-localization` for device locale detection, `AsyncStorage` for persistence. Use `useTranslation()` hook.
+- **Language picker**: Web `components/LanguagePicker.tsx` (dropdown). Mobile `components/LanguagePicker.tsx` (bottom sheet modal). Placed in home nav and chat header.
+- **Backend locale**: `ChatRequest` includes optional `locale` field. Orchestrator passes `context["locale"]` to agents. `discourse.py` has `t(key, locale)` helper with full translations. LLM gateway prepends locale-specific system prompts via `LOCALE_INSTRUCTIONS`.
+- **Adding a new language**: Add locale file in `packages/locales/`, add entry to `SUPPORTED_LANGUAGES` in `packages/shared-ts/src/types.ts`, add translations to `discourse.py` TRANSLATIONS dict, add instruction to `LOCALE_INSTRUCTIONS` in LLM gateway, update language picker arrays.
+- **Medical terms**: Keep medical terminology, drug names, and clinical codes in English across all languages for safety and clarity.
+- **Translation keys**: Always use `t("namespace.key")` pattern. Never hardcode user-facing strings. Add new keys to `en.json` first, then all other locale files.
+
+## Deployment
+
+- **Backend**: CORS origins configurable via `CORS_ALLOW_ORIGINS` (comma-separated). Use `render.yaml` for Render blueprint; `docker compose --profile production` for self-hosted.
+- **Web**: Deploy to Vercel; set `NEXT_PUBLIC_GATEWAY_URL` in env. PWA manifest and service worker in `apps/web/public/`.
+- **Mobile**: EAS Build profiles in `eas.json` (development, preview, production). Set `EXPO_PUBLIC_GATEWAY_URL` per profile. OTA updates via `expo-updates`; run `eas update:configure` to set project ID.
+- **Environment**: Use `.env.production.example` as template for production secrets and URLs.
 
 ## New Feature Checklist
 

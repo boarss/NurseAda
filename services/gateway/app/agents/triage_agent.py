@@ -7,20 +7,31 @@ from app.agents.base import BaseAgent, AgentResult
 from app.config import GATEWAY_CDSS_URL, GATEWAY_FHIR_URL, GATEWAY_KNOWLEDGE_URL
 from app.services.verification import get_standard_disclaimer
 from app.services.fallback_triage import run_fallback_triage
-from app.services.discourse import format_triage_response, HERBAL_HEADER
+from app.services.discourse import format_triage_response, format_appointment_followup, t as discourse_t
 
 
 async def _append_herbal_if_available(
-    content: str, query: str, base_sources: list[str], severity: str = "low"
+    content: str,
+    query: str,
+    base_sources: list[str],
+    severity: str = "low",
+    context: dict | None = None,
 ) -> tuple[str, list[str]]:
     """Append herbal/natural remedy options for non-emergency triage when knowledge is configured."""
     if severity in ("emergency", "high") or not GATEWAY_KNOWLEDGE_URL:
         return content, base_sources
+
+    locale = (context or {}).get("locale", "en")
+    retrieve_context: dict | None = None
+    medications = (context or {}).get("medications")
+    if medications:
+        retrieve_context = {"medications": medications}
+
     try:
         async with httpx.AsyncClient() as client:
             r = await client.post(
                 f"{GATEWAY_KNOWLEDGE_URL.rstrip('/')}/retrieve/herbal",
-                json={"query": query, "top_k": 2},
+                json={"query": query, "top_k": 2, "context": retrieve_context},
                 timeout=6.0,
             )
             if r.status_code != 200:
@@ -29,11 +40,12 @@ async def _append_herbal_if_available(
             chunks = data.get("chunks", [])
             if not chunks:
                 return content, base_sources
-            lines = [content, f"\n{HERBAL_HEADER}"]
+            herbal_header = discourse_t("herbal_header", locale)
+            lines = [content, f"\n{herbal_header}"]
             for c in chunks:
-                t = c.get("text", "")
-                if t:
-                    lines.append(f"• {t}")
+                txt = c.get("text", "")
+                if txt:
+                    lines.append(f"• {txt}")
             return "\n".join(lines), base_sources + ["Knowledge – Herbal"]
     except Exception:
         return content, base_sources
@@ -55,7 +67,7 @@ class TriageAgent(BaseAgent):
     ) -> AgentResult:
         context = context or {}
         patient_id = context.get("patient_id")
-        # Optional: pull FHIR observations for context
+        locale = context.get("locale", "en")
         observations_note = ""
         if patient_id and GATEWAY_FHIR_URL:
             try:
@@ -69,7 +81,6 @@ class TriageAgent(BaseAgent):
                         observations_note = " [EHR context available]"
             except Exception:
                 pass
-        # Call CDSS triage, or use fallback when CDSS not configured
         if not GATEWAY_CDSS_URL:
             result = run_fallback_triage(user_message)
             content = format_triage_response(
@@ -78,8 +89,11 @@ class TriageAgent(BaseAgent):
                 reasoning=result.reasoning,
                 suggestions=result.suggestions,
                 inferred_codes=result.inferred_codes,
+                locale=locale,
             )
-            content, sources = await _append_herbal_if_available(content, user_message, ["Fallback triage"], result.severity)
+            content, sources = await _append_herbal_if_available(content, user_message, ["Fallback triage"], result.severity, context)
+            if result.severity not in ("emergency",):
+                content += format_appointment_followup(result.severity, locale)
             return AgentResult(
                 content=content + get_standard_disclaimer(),
                 agent_id=self.agent_id,
@@ -96,7 +110,7 @@ class TriageAgent(BaseAgent):
                 )
                 if r.status_code != 200:
                     return AgentResult(
-                        content="I wasn't able to complete the assessment right now. Please try again, or seek in-person care if needed."
+                        content=discourse_t("could_not_process", locale)
                         + get_standard_disclaimer(),
                         agent_id=self.agent_id,
                     )
@@ -113,8 +127,11 @@ class TriageAgent(BaseAgent):
                     suggestions=suggestions,
                     inferred_codes=inferred_codes,
                     observations_note=observations_note.strip(),
+                    locale=locale,
                 )
-                content, sources = await _append_herbal_if_available(content, user_message, ["CDSS"], severity)
+                content, sources = await _append_herbal_if_available(content, user_message, ["CDSS"], severity, context)
+                if severity not in ("emergency",):
+                    content += format_appointment_followup(severity, locale)
                 return AgentResult(
                     content=content + get_standard_disclaimer(),
                     agent_id=self.agent_id,
@@ -123,7 +140,7 @@ class TriageAgent(BaseAgent):
                 )
         except Exception as e:
             return AgentResult(
-                content="The symptom check is temporarily unavailable. For urgent concerns, please seek care in person or call emergency services."
+                content=discourse_t("something_went_wrong", locale)
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
             )

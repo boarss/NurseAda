@@ -4,10 +4,8 @@ Medication agent: drug info, interactions, formulary (FHIR + pharmacy APIs).
 import httpx
 from app.agents.base import BaseAgent, AgentResult
 from app.config import GATEWAY_FHIR_URL, GATEWAY_CDSS_URL, PHARMACY_API_URL
-
-
-def get_standard_disclaimer() -> str:
-    return "\n\nThis is not a substitute for professional medical advice. Always confirm with a pharmacist or doctor. In an emergency, seek care immediately."
+from app.services.verification import get_standard_disclaimer
+from app.services.discourse import t as discourse_t
 
 
 class MedicationAgent(BaseAgent):
@@ -26,6 +24,7 @@ class MedicationAgent(BaseAgent):
     ) -> AgentResult:
         context = context or {}
         patient_id = context.get("patient_id")
+        locale = context.get("locale", "en")
         # Optional: current medications from FHIR
         current_meds_note = ""
         if patient_id and GATEWAY_FHIR_URL:
@@ -43,7 +42,7 @@ class MedicationAgent(BaseAgent):
 
         if not GATEWAY_CDSS_URL and not PHARMACY_API_URL:
             return AgentResult(
-                content="Medication services are not configured. For drug information and interactions, please ask your pharmacist or doctor."
+                content=discourse_t("could_not_process", locale)
                 + get_standard_disclaimer(),
                 agent_id=self.agent_id,
             )
@@ -97,8 +96,7 @@ class MedicationAgent(BaseAgent):
 
         content = (
             interactions_text
-            or "I don't have access to pharmacy or drug-interaction data right now. "
-            "Please ask your pharmacist about your medications and any new drugs."
+            or discourse_t("could_not_match", locale)
             + current_meds_note
             + get_standard_disclaimer()
         )
