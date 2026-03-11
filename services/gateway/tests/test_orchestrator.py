@@ -21,6 +21,29 @@ def test_detect_intent_lab():
     assert _detect_intent("lab work") == "lab"
 
 
+def test_detect_intent_imaging_and_image_context():
+    # Text-based imaging keywords
+    assert _detect_intent("chest xray result") == "imaging"
+    assert _detect_intent("ct scan report") == "imaging"
+    # Image attachment alone should also route to imaging
+    assert (
+        _detect_intent("please take a look", context={"image_base64": "xxx"})
+        == "imaging"
+    )
+
+
+def test_detect_intent_appointment():
+    assert _detect_intent("I want to book an appointment with a doctor") == "appointment"
+    assert _detect_intent("find a clinic near me") == "appointment"
+    assert _detect_intent("schedule hospital visit tomorrow") == "appointment"
+
+
+def test_detect_intent_herbal():
+    assert _detect_intent("any herbal remedy for cough?") == "herbal"
+    assert _detect_intent("zobo and dogonyaro for malaria") == "herbal"
+    assert _detect_intent("natural remedies with bitter leaf") == "herbal"
+
+
 def test_detect_intent_triage():
     assert _detect_intent("I have a headache") == "triage"
     assert _detect_intent("symptom check") == "triage"

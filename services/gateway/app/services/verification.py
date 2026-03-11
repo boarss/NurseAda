@@ -76,6 +76,16 @@ def verify_agent_output(
     return VerificationResult(True)
 
 
-def get_standard_disclaimer() -> str:
-    """Appended to clinical agent output when no disclaimer is present."""
-    return "\n\nThis is not a substitute for professional medical advice. Please consult a healthcare provider for diagnosis and treatment. In an emergency, seek care immediately."
+def get_standard_disclaimer(locale: str | None = None) -> str:
+    """
+    Appended to clinical agent output when no disclaimer is present.
+
+    The disclaimer text is kept in English across locales so that
+    safety-critical instructions remain consistent and recognizable.
+    """
+    _ = locale  # locale is accepted for forward compatibility but not used yet
+    return (
+        "\n\nThis is not a substitute for professional medical advice. "
+        "Please consult a healthcare provider for diagnosis and treatment. "
+        "In an emergency, seek care immediately."
+    )

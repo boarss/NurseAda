@@ -53,3 +53,11 @@ def test_get_standard_disclaimer():
     d = get_standard_disclaimer()
     assert "not a substitute" in d
     assert "consult" in d or "emergency" in d
+
+
+def test_get_standard_disclaimer_locale_variants():
+    # Disclaimer should remain in English but still contain safety phrases
+    for locale in ["en", "pcm", "ha", "yo", "ig"]:
+        d = get_standard_disclaimer(locale)
+        assert "not a substitute" in d
+        assert "consult" in d or "emergency" in d

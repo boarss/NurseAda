@@ -13,7 +13,10 @@
     "dev:web": "npm run dev --workspace=apps/web",
     "dev:mobile": "npm run start --workspace=apps/mobile",
     "build": "npm run build --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "lint": "npm run lint --workspaces --if-present",
+    "test:backend": "pytest services/gateway/tests services/cdss/tests services/fhir-adapter/tests",
+    "test:web": "npm test --workspace=apps/web",
+    "test:e2e": "npx playwright test"
   },
   "engines": {
     "node": ">=18"
@@ -24,6 +27,7 @@
   },
   "devDependencies": {
     "dotenv": "^16.4.0",
-    "tsx": "^4.19.0"
+    "tsx": "^4.19.0",
+    "@playwright/test": "^1.49.0"
   }
 }

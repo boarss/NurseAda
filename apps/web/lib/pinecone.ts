@@ -62,7 +62,7 @@ export async function getRecommendations(
   const ns = index.namespace(NAMESPACE);
 
   // 1. Fetch the source item to get its content for similarity search
-  const fetchResult = await ns.fetch({ ids: [itemId] });
+  const fetchResult = await ns.fetch([itemId]);
   const record = fetchResult.records?.[itemId];
   if (!record?.metadata) {
     throw new Error(`Item not found: ${itemId}`);
@@ -80,7 +80,7 @@ export async function getRecommendations(
     ...(categoryFilter && { filter: { category: { $eq: categoryFilter } } }),
   };
 
-  const results = await ns.searchRecords({
+  const results = await (ns as any).searchRecords({
     query,
     rerank: {
       model: "bge-reranker-v2-m3",
@@ -90,8 +90,10 @@ export async function getRecommendations(
   });
 
   // 3. Exclude the source item from results
-  const hits = (results.result?.hits ?? []).filter((h) => h._id !== itemId);
-  return hits.slice(0, topK) as RecommendationHit[];
+  const hits = ((results.result?.hits ?? []) as RecommendationHit[]).filter(
+    (h) => h._id !== itemId,
+  );
+  return hits.slice(0, topK);
 }
 
 /**
@@ -112,7 +114,7 @@ export async function getRecommendationsByQuery(
     ...(categoryFilter && { filter: { category: { $eq: categoryFilter } } }),
   };
 
-  const results = await ns.searchRecords({
+  const results = await (ns as any).searchRecords({
     query,
     rerank: {
       model: "bge-reranker-v2-m3",
@@ -137,8 +139,8 @@ export async function upsertRecommendationRecords(
 
   for (let i = 0; i < records.length; i += BATCH_SIZE) {
     const batch = records.slice(i, i + BATCH_SIZE);
-    await ns.upsertRecords({
-      records: batch as Parameters<typeof ns.upsertRecords>[0]["records"],
+    await (ns as any).upsertRecords({
+      records: batch,
     });
   }
 }
