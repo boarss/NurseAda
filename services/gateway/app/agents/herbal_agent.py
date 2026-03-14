@@ -1,7 +1,12 @@
 """
 Herbal agent: evidence-based herbal and natural remedy recommendations.
-Uses knowledge service /retrieve/herbal with context-aware safety filtering.
-Complementary to conventional care — never a substitute.
+
+- Herbal content comes only from the knowledge service (curated/herbal_content);
+  no hospital or FMC APIs are used for herbal data.
+- When patient_id is set, this agent may fetch patient medications from FHIR
+  solely for drug–herb interaction and population safety via /retrieve/herbal.
+- Complementary to conventional care — never a substitute.
+See .cursor/skills/herbal-recommendations/SKILL.md for full guidance.
 """
 from __future__ import annotations
 

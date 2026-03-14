@@ -6,7 +6,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ALLOW_ORIGINS
-from app.routers import health, chat, patient, feedback, herbal, medications, appointments
+from app.routers import (
+    health,
+    chat,
+    patient,
+    feedback,
+    herbal,
+    medications,
+    appointments,
+    admin_clinics,
+)
 
 app = FastAPI(
     title="NurseAda Gateway",
@@ -29,6 +38,7 @@ app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
 app.include_router(herbal.router, prefix="/herbal", tags=["herbal"])
 app.include_router(medications.router, prefix="/medications", tags=["medications"])
 app.include_router(appointments.router, prefix="/appointments", tags=["appointments"])
+app.include_router(admin_clinics.router, prefix="/admin/clinics", tags=["admin-clinics"])
 
 
 @app.get("/")

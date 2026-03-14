@@ -71,6 +71,27 @@ Without Supabase, auth is disabled (guest mode). Chat works, but patient data an
 
 ---
 
+### 4. Minimal Independent Stack
+
+For a self-contained NurseAda deployment (no hospital/FMC/EHR integration), you only need:
+
+- **Gateway + LLM gateway** — chat and clinical agents (triage, general, medications).
+- **Knowledge service** — herbal remedies, clinic directory, clinical content.
+- **Supabase** — auth, medication reminders, appointments.
+- **Web and/or mobile apps** — pointing at the gateway URL.
+
+These variables should be set for the minimal stack:
+
+- `NEXT_PUBLIC_GATEWAY_URL`, `EXPO_PUBLIC_GATEWAY_URL`
+- `OPENAI_API_KEY` (and optionally `OPENAI_BASE_URL`, `COMPLETION_MODEL`, `VISION_MODEL`)
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- `GATEWAY_KNOWLEDGE_URL`, `GATEWAY_LLM_URL`
+
+Everything else in the table below is **optional** and only needed when you integrate external systems (FHIR/EHR, CDSS, XAI, telecoms).
+
+---
+
 ## Optional Variables
 
 | Variable | Purpose | Default |
@@ -85,6 +106,8 @@ Without Supabase, auth is disabled (guest mode). Chat works, but patient data an
 | `VISION_MODEL` | Model for image analysis | `gpt-4o` |
 | `COMPLETION_MODEL` | Model for chat | `gpt-4o` |
 | `CORS_ALLOW_ORIGINS` | Allowed web origins | `http://localhost:3000,http://127.0.0.1:3000` |
+| `KNOWLEDGE_CLINICS_SOURCE` | Source for clinic directory (`memory` or `supabase`) | `memory` |
+| `GATEWAY_ADMIN_EMAILS` | Comma-separated list of admin emails for clinic management | — |
 
 ---
 

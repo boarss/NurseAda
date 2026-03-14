@@ -100,6 +100,28 @@ cd services/ussd && pip install -r requirements.txt && uvicorn app.main:app --re
 
 Or run all backend services with `docker-compose up --build`.
 
+### Minimal independent deployment (no hospital/FMC integration)
+
+You can run NurseAda as a fully independent virtual primary care assistant without connecting to any hospital, FMC, or external EHR:
+
+- **Required backend services**: Gateway, Knowledge, LLM Gateway, Supabase.
+- **Optional services**: CDSS, XAI, FHIR adapter, USSD bridge.
+- **Clients**: Web (`apps/web`) and/or mobile (`apps/mobile`) pointing at the gateway URL.
+
+In this mode:
+
+- Clinic directory and herbal content come from the **Knowledge** service (no hospital APIs).
+- Appointments are stored in **Supabase** as requests against your own clinic directory.
+- FHIR/EHR integration (`GATEWAY_FHIR_URL`, `FHIR_BASE_URL`) is optional and can be added later.
+
+See [ENV_SETUP.md](./ENV_SETUP.md) for required env vars for this minimal stack.
+
+### Managing the primary care network
+
+- The clinic directory is stored in Supabase in the `clinics` table (seeded from `services/knowledge/app/clinic_content.py`).
+- A minimal admin API for clinics lives in `services/gateway/app/routers/admin_clinics.py` and is protected by `GATEWAY_ADMIN_EMAILS`.
+- The web app exposes an admin-only page at `/admin/clinics` that lists all clinics in the network (you must sign in with an admin email to access it).
+
 ## Authentication
 
 NurseAda uses **Supabase Auth** (email + password). Create a Supabase project and set the env vars below.
@@ -147,6 +169,12 @@ NurseAda provides evidence-based herbal and natural remedy recommendations relev
 - **Web**: Browse the full catalog at `/remedies` with search, condition filters, and evidence badges. The chat includes herbal suggested prompts and a "Remedies" nav link.
 - **Mobile**: Tap "Herbal Remedies" on the home screen to browse. The chat includes herbal suggested prompts.
 - Set `GATEWAY_KNOWLEDGE_URL` for the herbal feature to work.
+
+Herbal flows are intentionally **independent of hospitals/FMCs**:
+
+- All herbal content comes from the Knowledge service (`herbal_content.py` and `/retrieve/herbal`).
+- The herbal agent never calls hospital or FMC APIs; FHIR is used only to fetch patient medications for drug–herb interaction checks.
+- See `.cursor/skills/herbal-recommendations/SKILL.md` for guardrails on sources, safety, and framing.
 
 ## Patient Data
 
@@ -208,7 +236,7 @@ Key variables:
 - Supabase Auth keys (see Authentication section above)
 - `GATEWAY_KNOWLEDGE_URL` for herbal remedies and knowledge retrieval (see Herbal Remedies section above)
 - `GATEWAY_FHIR_URL` for patient data access (see Patient Data section above)
-- Vector DB keys when you enable those features
+- Vector DB keys when you enable optional Pinecone recommendations (see `docs/PINECONE_RECOMMENDATIONS.md`)
 
 ## License
 

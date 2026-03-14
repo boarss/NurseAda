@@ -85,6 +85,7 @@ export default function ChatPage() {
   const { user, signOut, accessToken } = useAuth();
   const { locale } = useLocale();
   const [message, setMessage] = useState("");
+  const [dismissedAuthNudge, setDismissedAuthNudge] = useState(false);
 
   const suggestedPrompts = [
     t("chat.promptHeadache"),
@@ -296,6 +297,42 @@ export default function ChatPage() {
       )}
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
+        {!user && messages.length > 0 && !dismissedAuthNudge && (
+          <div
+            className="mb-4 rounded-card border border-primary/30 bg-primary/5 px-4 py-3 text-sm font-body text-fg flex flex-wrap items-center gap-3"
+            role="status"
+          >
+            <div className="flex-1 min-w-[180px]">
+              <p className="font-semibold text-primary">
+                {t("chat.authBannerTitle")}
+              </p>
+              <p className="text-xs text-muted mt-0.5">
+                {t("chat.authBannerBody")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/auth/sign-up"
+                className="rounded-card bg-primary text-white px-3 py-1.5 text-xs font-body font-semibold hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {t("common.signUp")}
+              </Link>
+              <Link
+                href="/auth/sign-in"
+                className="rounded-card border border-border bg-surface px-3 py-1.5 text-xs font-body text-muted hover:text-fg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {t("common.signIn")}
+              </Link>
+              <button
+                type="button"
+                onClick={() => setDismissedAuthNudge(true)}
+                className="text-xs text-muted hover:text-fg px-1 py-1 focus:outline-none focus:ring-2 focus:ring-primary rounded-card"
+              >
+                {t("common.close")}
+              </button>
+            </div>
+          </div>
+        )}
         {error && (
           <div
             className="mb-4 rounded-card border border-error/40 bg-error/10 px-4 py-3 text-sm text-error"

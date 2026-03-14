@@ -81,7 +81,9 @@
     "permissionNeeded": "Permission needed",
     "photoPermission": "Please allow access to your photos to attach medical images.",
     "cameraPermission": "Please allow camera access to take photos of symptoms or scans.",
-    "preview": "Preview"
+    "preview": "Preview",
+    "authBannerTitle": "Save your progress and set reminders",
+    "authBannerBody": "Create a free account to save your chats, book appointments, and set medication reminders."
   },
   "remedies": {
     "title": "Herbal Remedies",
