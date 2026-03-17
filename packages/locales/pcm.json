@@ -81,7 +81,9 @@
     "permissionNeeded": "Permission needed",
     "photoPermission": "Abeg allow access to ya photos to attach medical picture.",
     "cameraPermission": "Abeg allow camera access to snap photo of symptom or scan.",
-    "preview": "Preview"
+    "preview": "Preview",
+    "authBannerTitle": "Save ya progress and set reminder",
+    "authBannerBody": "Create free account to save ya chat, book appointment, and set medicine reminder."
   },
   "remedies": {
     "title": "Local Remedies",
@@ -172,7 +174,12 @@
     "filterByState": "Filter by state",
     "filterBySpecialty": "Filter by specialty",
     "filterByType": "Filter by facility type",
-    "disclaimer": "Appointment request na for scheduling only, e no be doctor consultation. Confirm with the hospital if them available. This na general information, no be medical advice. See healthcare provider for diagnosis and treatment. If emergency, go hospital sharp sharp or call 112."
+    "disclaimer": "Appointment request na for scheduling only, e no be doctor consultation. Confirm with the hospital if them available. This na general information, no be medical advice. See healthcare provider for diagnosis and treatment. If emergency, go hospital sharp sharp or call 112.",
+    "adminSignInRequired": "Please sign in to manage clinics.",
+    "adminClinicsTitle": "Clinic network",
+    "adminClinicsSubtitle": "Manage the NurseAda primary care network. Only admins can see this page.",
+    "adminClinicsInactive": "Inactive",
+    "adminClinicsEmpty": "No clinics found."
   },
   "auth": {
     "welcomeBack": "Welcome back",

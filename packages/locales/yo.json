@@ -81,7 +81,9 @@
     "permissionNeeded": "A nílò àṣẹ",
     "photoPermission": "Jọ̀wọ́ fàyè gba wíwọlé sí àwọn àwòrán rẹ láti so àwòrán ìṣègùn pọ̀.",
     "cameraPermission": "Jọ̀wọ́ fàyè gba kámẹ́rà láti ya àwòrán àmì àrùn tàbí ìdánwò.",
-    "preview": "Wo ṣáájú fíránṣẹ́"
+    "preview": "Wo ṣáájú fíránṣẹ́",
+    "authBannerTitle": "Fi àwọn ìlọsíwájú rẹ sílẹ̀ kí o si ṣètò àwọn ìrántí",
+    "authBannerBody": "Ṣẹ̀dá àkọọ́lẹ̀ ọfẹ́ láti fi àwọn ìbánisọ̀rọ̀ rẹ sílẹ̀, ṣe ìpàdé, àti ṣètò àwọn ìrántí oògùn."
   },
   "remedies": {
     "title": "Àwọn Àgbo Ilẹ̀",
@@ -172,7 +174,12 @@
     "filterByState": "Yàn gẹ́gẹ́ bí ìpínlẹ̀",
     "filterBySpecialty": "Yàn gẹ́gẹ́ bí ìmọ̀ pàtàkì",
     "filterByType": "Yàn gẹ́gẹ́ bí irú ilé ìwòsàn",
-    "disclaimer": "Ìbéèrè ìpàdé jẹ́ fún ṣíṣe àkójọ àkókò nìkan, kì í ṣe ìjíròrò dókítà. Jọ̀wọ́ ṣe ìdánilójú pẹ̀lú ilé ìwòsàn tààrà. Èyí jẹ́ àlàyé gbogbogbò nìkan, kì í ṣe ìmọ̀ràn dókítà. Rí dókítà fún ìdámọ̀ àrùn àti ìtọ́jú. Tí ó bá jẹ́ pàjáwìrì, lọ sí ilé ìwòsàn lẹ́sẹ̀kẹsẹ̀ tàbí pe 112."
+    "disclaimer": "Ìbéèrè ìpàdé jẹ́ fún ṣíṣe àkójọ àkókò nìkan, kì í ṣe ìjíròrò dókítà. Jọ̀wọ́ ṣe ìdánilójú pẹ̀lú ilé ìwòsàn tààrà. Èyí jẹ́ àlàyé gbogbogbò nìkan, kì í ṣe ìmọ̀ràn dókítà. Rí dókítà fún ìdámọ̀ àrùn àti ìtọ́jú. Tí ó bá jẹ́ pàjáwìrì, lọ sí ilé ìwòsàn lẹ́sẹ̀kẹsẹ̀ tàbí pe 112.",
+    "adminSignInRequired": "Jọ̀wọ́ wọlé láti ṣakoso àwọn ilé ìwòsàn.",
+    "adminClinicsTitle": "Ọ̀nà ilé ìwòsàn",
+    "adminClinicsSubtitle": "Ṣakoso ẹgbẹ́ ìtọ́jú àkọ́kọ́ NurseAda. Àwọn alábójútó nìkan lè rí ojúewé yìí.",
+    "adminClinicsInactive": "Kò ṣiṣe",
+    "adminClinicsEmpty": "Kò sí ilé ìwòsàn rí."
   },
   "auth": {
     "welcomeBack": "Ẹ káàbọ̀ padà",

@@ -174,7 +174,12 @@
     "filterByState": "Filter by state",
     "filterBySpecialty": "Filter by specialty",
     "filterByType": "Filter by facility type",
-    "disclaimer": "Appointment requests are for scheduling purposes only and do not constitute a medical consultation. Please confirm availability directly with the facility. This is general information only, not medical advice. Consult a healthcare provider for diagnosis and treatment. In an emergency, seek care immediately or call 112."
+    "disclaimer": "Appointment requests are for scheduling purposes only and do not constitute a medical consultation. Please confirm availability directly with the facility. This is general information only, not medical advice. Consult a healthcare provider for diagnosis and treatment. In an emergency, seek care immediately or call 112.",
+    "adminSignInRequired": "Please sign in to manage clinics.",
+    "adminClinicsTitle": "Clinic network",
+    "adminClinicsSubtitle": "Manage the NurseAda primary care network. Only admins can see this page.",
+    "adminClinicsInactive": "Inactive",
+    "adminClinicsEmpty": "No clinics found."
   },
   "auth": {
     "welcomeBack": "Welcome back",

@@ -81,7 +81,9 @@
     "permissionNeeded": "Ana buƙatar izini",
     "photoPermission": "Don Allah ka ba da damar shiga hotunanka don haɗa hoton likitanci.",
     "cameraPermission": "Don Allah ka ba da damar kyamara don ɗaukar hoton alamomi ko scan.",
-    "preview": "Gani kafin aika"
+    "preview": "Gani kafin aika",
+    "authBannerTitle": "Ajiye ci gabanka kuma saita tunatarwa",
+    "authBannerBody": "Ƙirƙiri asusun kyauta don ajiye tattaunawarka, yin alƙawari, da saita tunatarwar magunguna."
   },
   "remedies": {
     "title": "Magungunan Gargajiya",
@@ -172,7 +174,12 @@
     "filterByState": "Tace ta jiha",
     "filterBySpecialty": "Tace ta ƙwarewa",
     "filterByType": "Tace ta nau'in cibiya",
-    "disclaimer": "Neman alƙawari don tsarin lokaci ne kawai, ba ziyarar likita ba ne. Ka tabbatar da samuwa kai tsaye tare da asibitin. Wannan bayani ne na gaba ɗaya kawai, ba shawarar likita ba. Ka nemi likita don ganewar cuta da magani. Idan gaggawa ce, je asibiti nan take ko kira 112."
+    "disclaimer": "Neman alƙawari don tsarin lokaci ne kawai, ba ziyarar likita ba ne. Ka tabbatar da samuwa kai tsaye tare da asibitin. Wannan bayani ne na gaba ɗaya kawai, ba shawarar likita ba. Ka nemi likita don ganewar cuta da magani. Idan gaggawa ce, je asibiti nan take ko kira 112.",
+    "adminSignInRequired": "Don Allah ka shiga don sarrafa asibitoci.",
+    "adminClinicsTitle": "Cibiyar asibiti",
+    "adminClinicsSubtitle": "Sarrafa hanyar sadarwar NurseAda na kulawa ta farko. Admins kawai zasu iya ganin wannan shafi.",
+    "adminClinicsInactive": "Babu aiki",
+    "adminClinicsEmpty": "Babu asibitoci da aka samu."
   },
   "auth": {
     "welcomeBack": "Barka da dawowa",

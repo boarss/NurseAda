@@ -11,6 +11,32 @@ function authHeaders(token?: string | null): Record<string, string> {
   return h;
 }
 
+/** Generic authenticated fetch to gateway; path is relative to GATEWAY_URL (e.g. "/admin/clinics"). */
+export async function apiFetch<T = unknown>(
+  path: string,
+  options?: { token?: string | null; method?: string; body?: unknown }
+): Promise<T> {
+  const res = await fetch(`${GATEWAY_URL}${path}`, {
+    method: options?.method ?? "GET",
+    headers: authHeaders(options?.token),
+    ...(options?.body !== undefined && { body: JSON.stringify(options.body) }),
+  });
+  if (!res.ok) {
+    if (res.status === 401) throw new Error("Please sign in to continue.");
+    const text = await res.text();
+    let msg = "Request failed";
+    try {
+      const parsed = text ? JSON.parse(text) : {};
+      msg = parsed.detail ?? parsed.message ?? msg;
+    } catch {
+      if (res.status >= 500) msg = "Server error. Please try again shortly.";
+    }
+    throw new Error(typeof msg === "string" ? msg : "Request failed");
+  }
+  const text = await res.text();
+  return (text ? JSON.parse(text) : {}) as T;
+}
+
 export async function healthCheck(): Promise<{ status: "healthy" | "unhealthy" }> {
   const res = await fetch(`${GATEWAY_URL}/health`, { cache: "no-store" });
   if (!res.ok) throw new Error("Health check failed");

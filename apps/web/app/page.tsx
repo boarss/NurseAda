@@ -4,14 +4,15 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { useAuth } from "@/lib/AuthContext";
+import { PageShell } from "@/components/PageShell";
 
 export default function HomePage() {
   const t = useTranslations();
   const { user, signOut, loading } = useAuth();
 
   return (
-    <main className="min-h-screen flex flex-col">
-      <nav className="flex items-center justify-end gap-3 px-6 py-3 opacity-0 animate-in animate-in-delay-1">
+    <PageShell className="flex min-h-screen flex-col gap-6">
+      <nav className="flex items-center justify-end gap-3 py-3 opacity-0 animate-in animate-in-delay-1">
         <LanguagePicker />
         {!loading && (
           <>
@@ -48,7 +49,7 @@ export default function HomePage() {
         )}
       </nav>
 
-      <div className="flex-1 flex flex-col justify-center px-6 py-16 sm:px-10 md:px-16 max-w-4xl mx-auto w-full">
+      <div className="flex flex-1 flex-col justify-center">
         <div className="max-w-xl">
           <p className="text-accent font-body text-sm font-semibold tracking-wide uppercase opacity-0 animate-in animate-in-delay-1">
             {t("home.tagline")}
@@ -62,7 +63,7 @@ export default function HomePage() {
           <div className="mt-10 flex flex-wrap gap-4 opacity-0 animate-in animate-in-delay-3">
             <Link
               href="/chat"
-              className="inline-flex items-center gap-2 rounded-card bg-primary text-white font-body font-semibold px-8 py-4 min-h-[48px] shadow-card transition-transform duration-fast ease-out-expo hover:bg-primary-hover hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg touch-manipulation"
+              className="inline-flex items-center gap-2 rounded-card bg-primary text-white font-body font-semibold px-6 sm:px-8 py-4 min-h-[48px] shadow-card transition-transform duration-fast ease-out-expo hover:bg-primary-hover hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg touch-manipulation"
             >
               {t("home.startChat")}
               <span className="text-white/80" aria-hidden>
@@ -71,13 +72,13 @@ export default function HomePage() {
             </Link>
             <Link
               href="/medications"
-              className="inline-flex items-center gap-2 rounded-card border-2 border-primary text-primary font-body font-semibold px-8 py-4 min-h-[48px] transition-transform duration-fast ease-out-expo hover:bg-primary/5 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg touch-manipulation"
+              className="inline-flex items-center gap-2 rounded-card border-2 border-primary text-primary font-body font-semibold px-6 sm:px-8 py-4 min-h-[48px] transition-transform duration-fast ease-out-expo hover:bg-primary/5 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg touch-manipulation"
             >
               {t("home.medications")}
             </Link>
             <Link
               href="/appointments"
-              className="inline-flex items-center gap-2 rounded-card border-2 border-primary text-primary font-body font-semibold px-8 py-4 min-h-[48px] transition-transform duration-fast ease-out-expo hover:bg-primary/5 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg touch-manipulation"
+              className="inline-flex items-center gap-2 rounded-card border-2 border-primary text-primary font-body font-semibold px-6 sm:px-8 py-4 min-h-[48px] transition-transform duration-fast ease-out-expo hover:bg-primary/5 hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg touch-manipulation"
             >
               {t("home.appointments")}
             </Link>
@@ -89,6 +90,7 @@ export default function HomePage() {
         className="h-1.5 w-full bg-gradient-to-r from-primary via-accent/80 to-primary"
         aria-hidden
       />
-    </main>
+    </PageShell>
   );
 }
+

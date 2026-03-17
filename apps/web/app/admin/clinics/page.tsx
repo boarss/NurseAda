@@ -21,19 +21,19 @@ type Clinic = {
 
 export default function AdminClinicsPage() {
   const t = useTranslations();
-  const { user, token } = useAuth();
+  const { user, accessToken } = useAuth();
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!accessToken) return;
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
         const res = await apiFetch<{ clinics: Clinic[] }>("/admin/clinics", {
-          token,
+          token: accessToken,
         });
         if (!cancelled) {
           setClinics(res.clinics ?? []);
@@ -52,7 +52,7 @@ export default function AdminClinicsPage() {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [accessToken]);
 
   if (!user) {
     return (

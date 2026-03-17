@@ -81,7 +81,9 @@
     "permissionNeeded": "A chọrọ ikike",
     "photoPermission": "Biko nye ohere ịnweta foto gị iji tinye foto ahụ ike.",
     "cameraPermission": "Biko nye ohere kamera iji see foto nke mgbaàmà ma ọ bụ nyocha.",
-    "preview": "Lee tupu izipu"
+    "preview": "Lee tupu izipu",
+    "authBannerTitle": "Chekwaa ọganihu gị ma dozie ihe ncheta",
+    "authBannerBody": "Mepụta akaụntụ efu iji chekwaa mkparịta ụka gị, hazie nkwekọrịta, na ịtọ ihe ncheta ọgwụ."
   },
   "remedies": {
     "title": "Ọgwụ Ọdịnala",
@@ -172,7 +174,12 @@
     "filterByState": "Họrọ site na steeti",
     "filterBySpecialty": "Họrọ site n'ọkachamara",
     "filterByType": "Họrọ site n'ụdị ụlọ ọgwụ",
-    "disclaimer": "Arịrịọ nkwekọrịta bụ maka nhazi oge naanị, ọ bụghị ịhụ dọkịta. Biko kwado na ụlọ ọgwụ ma ha dị. Nke a bụ ozi izugbe naanị, ọ bụghị ndụmọdụ dọkịta. Hụ onye nlekọta ahụ ike maka nchọpụta ọrịa na ọgwụgwọ. Ọ bụrụ mberede, gaa ụlọ ọgwụ ozugbo ma ọ bụ kpọọ 112."
+    "disclaimer": "Arịrịọ nkwekọrịta bụ maka nhazi oge naanị, ọ bụghị ịhụ dọkịta. Biko kwado na ụlọ ọgwụ ma ha dị. Nke a bụ ozi izugbe naanị, ọ bụghị ndụmọdụ dọkịta. Hụ onye nlekọta ahụ ike maka nchọpụta ọrịa na ọgwụgwọ. Ọ bụrụ mberede, gaa ụlọ ọgwụ ozugbo ma ọ bụ kpọọ 112.",
+    "adminSignInRequired": "Biko banye iji jikwaa ụlọ ọgwụ.",
+    "adminClinicsTitle": "Netwọk ụlọ ọgwụ",
+    "adminClinicsSubtitle": "Jikwaa netwọk nlekọta mbụ NurseAda. Naanị ndị nchịkwa nwere ike ịhụ ibe a.",
+    "adminClinicsInactive": "Anaghị arụ ọrụ",
+    "adminClinicsEmpty": "Ahụghị ụlọ ọgwụ ọ bụla."
   },
   "auth": {
     "welcomeBack": "Nnọọ ọzọ",
