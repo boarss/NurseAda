@@ -1,4 +1,4 @@
-const CACHE_NAME = "nurseada-v1";
+const CACHE_NAME = "nurseada-v2";
 const SHELL_ASSETS = ["/", "/chat", "/remedies"];
 
 self.addEventListener("install", (e) => {
@@ -21,6 +21,12 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
 
   if (e.request.method !== "GET") return;
+
+  // Always fetch fresh for key interactive pages to avoid stale UI.
+  if (url.origin === self.location.origin && (url.pathname.startsWith("/chat") || url.pathname.startsWith("/account"))) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
 
   // Network-first for API calls and navigation
   if (url.pathname.startsWith("/api") || url.origin !== self.location.origin) return;
