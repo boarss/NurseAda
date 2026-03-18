@@ -35,6 +35,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const formatAuthError = useCallback((err: unknown): string => {
+    if (err instanceof Error) {
+      const msg = err.message || "Authentication error";
+      if (msg.toLowerCase().includes("supabase is not configured")) {
+        return "Auth is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.";
+      }
+      if (msg.toLowerCase().includes("failed to fetch")) {
+        return "Network error reaching Supabase. Please check your internet connection and Supabase URL.";
+      }
+      return msg;
+    }
+    return "Authentication error. Please try again.";
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -51,17 +65,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return error ? error.message : null;
-  }, []);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return error ? error.message : null;
+    } catch (err) {
+      return formatAuthError(err);
+    }
+  }, [formatAuthError]);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return error ? error.message : null;
-  }, []);
+    try {
+      const { error } = await supabase.auth.signUp({ email, password });
+      return error ? error.message : null;
+    } catch (err) {
+      return formatAuthError(err);
+    }
+  }, [formatAuthError]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();

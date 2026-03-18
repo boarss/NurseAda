@@ -10,6 +10,25 @@ vi.mock("next/navigation", () => ({
   useParams: vi.fn(),
 }));
 
+vi.mock("@/lib/AuthContext", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/AuthContext")>(
+    "@/lib/AuthContext",
+  );
+  return {
+    ...actual,
+    useAuth: () => ({
+      session: null,
+      user: { id: "u1" },
+      loading: false,
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      accessToken: "test-token",
+    }),
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  };
+});
+
 vi.mock("@/lib/api", async () => {
   const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
   return {
@@ -41,10 +60,20 @@ describe("PatientProfilePage", () => {
     (useParams as unknown as vi.Mock).mockReturnValue({ id: "123" });
     renderWithProviders(<PatientProfilePage />);
 
-    await waitFor(() => expect(screen.getByText(/patient profile/i)).toBeInTheDocument());
-    expect(screen.getByText(/observations/i)).toBeInTheDocument();
-    expect(screen.getByText(/medications/i)).toBeInTheDocument();
-    expect(screen.getByText(/reports/i)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: /patient profile/i }),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole("button", { name: /observations/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /medications/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /reports/i }),
+    ).toBeInTheDocument();
   });
 });
 

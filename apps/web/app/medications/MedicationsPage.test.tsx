@@ -42,7 +42,9 @@ describe("MedicationsPage", () => {
     renderWithProviders(<MedicationsPage />);
     fireEvent.click(screen.getByRole("tab", { name: /interaction checker/i }));
 
-    const input = screen.getByLabelText(/check if your medicines/i);
+    const input = screen.getByLabelText(
+      /enter medications to check for interactions/i
+    );
     fireEvent.change(input, { target: { value: "aspirin" } });
     fireEvent.click(screen.getByRole("button", { name: /add/i }));
     fireEvent.change(input, { target: { value: "ibuprofen" } });

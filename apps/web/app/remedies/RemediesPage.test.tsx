@@ -31,7 +31,9 @@ describe("RemediesPage", () => {
     renderWithProviders(<RemediesPage />);
 
     await waitFor(() =>
-      expect(screen.getByText(/ginger tea/i)).toBeInTheDocument(),
+      expect(
+        screen.getByRole("heading", { name: /ginger tea/i }),
+      ).toBeInTheDocument(),
     );
     expect(screen.getByText(/moderate evidence/i)).toBeInTheDocument();
 
