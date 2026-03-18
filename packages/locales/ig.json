@@ -34,7 +34,8 @@
     "toastReminderDeleted": "E wepụla echefuru",
     "toastInteractionDone": "Nyocha mmekọrita agwụla",
     "toastAppointmentRequested": "E zigala arịrịọ oge",
-    "toastAppointmentCancelled": "E kagbuola oge"
+    "toastAppointmentCancelled": "E kagbuola oge",
+    "copyFailed": "Enweghị ike ịkó pịa"
   },
   "home": {
     "tagline": "Nlekọta ahụ ike, n'ụzọ gị",
@@ -43,15 +44,19 @@
     "medications": "Ọgwụ",
     "appointments": "Nkwekọrịta"
   },
+  "account": {
+    "title": "Akaụntụ",
+    "patientIdLabel": "Nọmbà onye ọrịa gị",
+    "patientIdHelp": "Jiri nọmba a mgbe ị na-akpọ nkwado. Ọ naghị enye onye ohere ịnweta ndekọ gị.",
+    "copy": "Kọpịa",
+    "copied": "E kọpịrịala"
+  },
   "chat": {
     "title": "Kwurịta okwu na NurseAda",
     "remedies": "Ọgwụ ọdịnala",
     "medications": "Ọgwụ",
     "appointments": "Nkwekọrịta",
-    "patientId": "Nọmbà onye ọrịa",
-    "patientIdLabel": "Nọmbà onye ọrịa maka ndekọ ụlọ ọgwụ",
-    "viewProfile": "Lee profaịlụ onye ọrịa",
-    "patient": "Onye ọrịa:",
+    "yourPatientId": "Nọmbà onye ọrịa gị",
     "emptyState": "Kọwaa otu i si enwe ahụ, jụọ maka ọgwụ, ma ọ bụ nweta nduzi ahụ ike. Ọ bụrụ mberede, kpọọ 112 ma ọ bụ gaa ụlọ ọgwụ ozugbo.",
     "tryThese": "Nwaa ndị a:",
     "placeholder": "Kọwaa mgbaàmà gị ma ọ bụ jụọ ajụjụ ahụ ike...",
@@ -204,8 +209,11 @@
   },
   "patient": {
     "title": "Profaịlụ Onye Ọrịa",
+    "myProfileTitle": "Profaịlụ M",
     "signInRequired": "A chọrọ ịbanye",
     "authRequired": "Ndekọ onye ọrịa chọrọ nkwenye.",
+    "notFoundTitle": "A hụghị profaịlụ",
+    "notFoundBody": "Nọmbà onye ọrịa ahụ adabaghị na akaụntụ gị. Biko mepee nke gị site na Akaụntụ.",
     "loadingDemographics": "Ozi onye ọrịa na-ebugo...",
     "observations": "Nnyocha",
     "medications": "Ọgwụ",
@@ -217,6 +225,7 @@
     "noMedications": "Ọ dịghị ọgwụ maka onye ọrịa a.",
     "noReports": "Ọ dịghị akụkọ maka onye ọrịa a.",
     "born": "A mụrụ ya {date}",
+    "yourPatientId": "Nọmbà onye ọrịa gị",
     "id": "Nọmbà: {id}",
     "prescribed": "A nyere ọgwụ {date}",
     "unknown": "Amaghị"

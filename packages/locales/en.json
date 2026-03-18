@@ -34,7 +34,8 @@
     "toastReminderDeleted": "Reminder removed",
     "toastInteractionDone": "Interaction check complete",
     "toastAppointmentRequested": "Appointment request sent",
-    "toastAppointmentCancelled": "Appointment cancelled"
+    "toastAppointmentCancelled": "Appointment cancelled",
+    "copyFailed": "Copy failed"
   },
   "home": {
     "tagline": "Primary care, your way",
@@ -43,15 +44,19 @@
     "medications": "Medications",
     "appointments": "Appointments"
   },
+  "account": {
+    "title": "Account",
+    "patientIdLabel": "Your Patient ID",
+    "patientIdHelp": "Use this Patient ID when contacting support. It does not grant access to your records.",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
   "chat": {
     "title": "Chat with NurseAda",
     "remedies": "Remedies",
     "medications": "Medications",
     "appointments": "Appointments",
-    "patientId": "Patient ID",
-    "patientIdLabel": "Patient ID for EHR context",
-    "viewProfile": "View patient profile",
-    "patient": "Patient:",
+    "yourPatientId": "Your Patient ID",
     "emptyState": "Describe your symptoms, ask about medications, or get general health guidance. In an emergency, call 112 or seek care immediately.",
     "tryThese": "Try one of these:",
     "placeholder": "Describe your symptoms or ask a health question...",
@@ -204,8 +209,11 @@
   },
   "patient": {
     "title": "Patient Profile",
+    "myProfileTitle": "My Profile",
     "signInRequired": "Sign in required",
     "authRequired": "Patient records require authentication.",
+    "notFoundTitle": "Profile not found",
+    "notFoundBody": "That Patient ID doesn't match your account. Please open your own profile from Account.",
     "loadingDemographics": "Loading patient demographics...",
     "observations": "Observations",
     "medications": "Medications",
@@ -217,6 +225,7 @@
     "noMedications": "No medications found for this patient.",
     "noReports": "No reports found for this patient.",
     "born": "Born {date}",
+    "yourPatientId": "Your Patient ID",
     "id": "ID: {id}",
     "prescribed": "Prescribed {date}",
     "unknown": "Unknown"

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { sendChatMessage, sendFeedback, getPatient, type PatientSummary } from "@/lib/api";
+import { sendChatMessage, sendFeedback } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { useLocale } from "@/lib/IntlProvider";
 import { LanguagePicker } from "@/components/LanguagePicker";
@@ -82,7 +82,7 @@ type ChatMsg = {
 
 export default function ChatPage() {
   const t = useTranslations();
-  const { user, signOut, accessToken } = useAuth();
+  const { user, signOut, accessToken, patientCode } = useAuth();
   const { locale } = useLocale();
   const [message, setMessage] = useState("");
   const [dismissedAuthNudge, setDismissedAuthNudge] = useState(false);
@@ -104,25 +104,9 @@ export default function ChatPage() {
   const [lastReplyIndex, setLastReplyIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [patientId, setPatientId] = useState("");
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
-  const [patientSummary, setPatientSummary] = useState<PatientSummary | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const id = patientId.trim();
-    if (!id || !accessToken) {
-      setPatientSummary(null);
-      return;
-    }
-    const timeout = setTimeout(() => {
-      getPatient(id, accessToken)
-        .then(setPatientSummary)
-        .catch(() => setPatientSummary(null));
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [patientId, accessToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,7 +133,6 @@ export default function ChatPage() {
         { role: "user" as const, content: userText },
       ];
       const { reply } = await sendChatMessage(nextMessages, {
-        patientId: patientId || undefined,
         imageBase64: imageToSend || undefined,
         token: accessToken,
         locale,
@@ -227,31 +210,21 @@ export default function ChatPage() {
         </Link>
         <LanguagePicker />
         <div className="ml-auto flex items-center gap-2">
-          {user ? (
-            <div className="flex items-center gap-1">
-              <input
-                type="text"
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                placeholder={t("chat.patientId")}
-                className="w-28 rounded-card border border-border bg-surface text-fg placeholder:text-muted px-2 py-1.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label={t("chat.patientIdLabel")}
-              />
-              {patientId.trim() && (
-                <Link
-                  href={`/patient/${encodeURIComponent(patientId.trim())}`}
-                  className="rounded-card border border-border bg-surface px-2 py-1.5 text-xs text-primary hover:bg-primary/10 font-body transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-                  title={t("chat.viewProfile")}
-                >
-                  {t("common.profile")}
-                </Link>
-              )}
-            </div>
-          ) : (
+          {!user && (
             <span className="text-xs text-muted font-body">{t("common.guest")}</span>
           )}
           {user ? (
             <>
+              <Link
+                href="/account"
+                className="hidden sm:inline rounded-card border border-border bg-surface px-2 py-1.5 text-xs text-muted hover:text-fg hover:bg-surface/80 font-body transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                title={t("chat.yourPatientId")}
+              >
+                {t("chat.yourPatientId")}:{" "}
+                <span className="text-fg font-semibold">
+                  {patientCode ?? "—"}
+                </span>
+              </Link>
               <span className="hidden sm:inline text-xs text-muted font-body truncate max-w-[120px]">
                 {user.email}
               </span>
@@ -273,28 +246,6 @@ export default function ChatPage() {
           )}
         </div>
       </header>
-
-      {patientSummary && (
-        <div className="px-4 py-2 bg-primary/5 border-b border-border flex items-center gap-2 text-sm font-body">
-          <span className="text-primary font-semibold">{t("chat.patient")}</span>
-          <span className="text-fg">
-            {(() => {
-              const n = patientSummary.name?.[0];
-              const given = n?.given?.join(" ") ?? "";
-              const name = [given, n?.family].filter(Boolean).join(" ") || patientSummary.id || "";
-              const parts = [name];
-              if (patientSummary.birthDate) {
-                const yrs = Math.floor(
-                  (Date.now() - new Date(patientSummary.birthDate).getTime()) / 31_557_600_000
-                );
-                parts.push(`${yrs}y`);
-              }
-              if (patientSummary.gender) parts.push(patientSummary.gender);
-              return parts.join(", ");
-            })()}
-          </span>
-        </div>
-      )}
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {!user && messages.length > 0 && !dismissedAuthNudge && (

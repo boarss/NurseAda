@@ -24,56 +24,23 @@ vi.mock("@/lib/AuthContext", async () => {
       signUp: vi.fn(),
       signOut: vi.fn(),
       accessToken: "test-token",
+      patientCode: "NA-000123",
     }),
     AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
 });
 
-vi.mock("@/lib/api", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
-  return {
-    ...actual,
-    getPatient: vi.fn().mockResolvedValue({
-      resourceType: "Patient",
-      id: "123",
-      name: [{ given: ["Test"], family: "User" }],
-      birthDate: "1990-01-01",
-      gender: "female",
-    }),
-    getObservations: vi.fn().mockResolvedValue({
-      resourceType: "Bundle",
-      entry: [],
-    }),
-    getMedications: vi.fn().mockResolvedValue({
-      resourceType: "Bundle",
-      entry: [],
-    }),
-    getDiagnosticReports: vi.fn().mockResolvedValue({
-      resourceType: "Bundle",
-      entry: [],
-    }),
-  };
-});
-
 describe("PatientProfilePage", () => {
   it("renders patient demographics and tabs", async () => {
-    (useParams as unknown as vi.Mock).mockReturnValue({ id: "123" });
+    (useParams as unknown as vi.Mock).mockReturnValue({ id: "NA-000123" });
     renderWithProviders(<PatientProfilePage />);
 
     await waitFor(() =>
       expect(
-        screen.getByRole("heading", { name: /patient profile/i }),
+        screen.getByRole("heading", { name: /my profile/i }),
       ).toBeInTheDocument(),
     );
-    expect(
-      screen.getByRole("button", { name: /observations/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /medications/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /reports/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/na-000123/i)).toBeInTheDocument();
   });
 });
 

@@ -19,6 +19,7 @@ type AuthState = {
   signUp: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   accessToken: string | null;
+  patientCode: string | null;
 };
 
 const AuthContext = createContext<AuthState>({
@@ -29,11 +30,13 @@ const AuthContext = createContext<AuthState>({
   signUp: async () => null,
   signOut: async () => {},
   accessToken: null,
+  patientCode: null,
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [patientCode, setPatientCode] = useState<string | null>(null);
 
   const formatAuthError = useCallback((err: unknown): string => {
     if (err instanceof Error) {
@@ -63,6 +66,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) {
+      setPatientCode(null);
+      return;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("patients")
+          .select("patient_code")
+          .eq("user_id", userId)
+          .single();
+        if (cancelled) return;
+        if (error) {
+          setPatientCode(null);
+          return;
+        }
+        setPatientCode(data?.patient_code ?? null);
+      } catch {
+        if (!cancelled) setPatientCode(null);
+      }
+    };
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
@@ -100,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signOut,
         accessToken: session?.access_token ?? null,
+        patientCode,
       }}
     >
       {children}

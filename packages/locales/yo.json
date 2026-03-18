@@ -34,7 +34,8 @@
     "toastReminderDeleted": "A ti yọ iranti kuro",
     "toastInteractionDone": "A ti pari ṣayẹwo ibatan",
     "toastAppointmentRequested": "A ti fi ibeere àkókò ránṣẹ́",
-    "toastAppointmentCancelled": "A ti fagilee àkókò"
+    "toastAppointmentCancelled": "A ti fagilee àkókò",
+    "copyFailed": "Kò lè ṣe ẹ̀dà"
   },
   "home": {
     "tagline": "Ìtọ́jú ìlera, ní ọ̀nà tìrẹ",
@@ -43,15 +44,19 @@
     "medications": "Oògùn",
     "appointments": "Ìpàdé"
   },
+  "account": {
+    "title": "Àkọọ́lẹ̀",
+    "patientIdLabel": "Nọ́mbà aláìsàn rẹ",
+    "patientIdHelp": "Lo nọ́mbà yìí nígbà tó bá fẹ́ kan sí ìtìlẹ́yìn. Kò fúnni ní ààyè sí ìwé ìròyìn rẹ.",
+    "copy": "Kó",
+    "copied": "A ti kó"
+  },
   "chat": {
     "title": "Bá NurseAda sọ̀rọ̀",
     "remedies": "Àwọn àgbo",
     "medications": "Oògùn",
     "appointments": "Ìpàdé",
-    "patientId": "Nọ́mbà aláìsàn",
-    "patientIdLabel": "Nọ́mbà aláìsàn fún àkọsílẹ̀ ilé ìwòsàn",
-    "viewProfile": "Wo àkọsílẹ̀ aláìsàn",
-    "patient": "Aláìsàn:",
+    "yourPatientId": "Nọ́mbà aláìsàn rẹ",
     "emptyState": "Ṣàpèjúwe bí o ṣe ń rí, bèèrè nípa oògùn, tàbí gba ìtọ́sọ́nà ìlera. Tí ó bá jẹ́ pàjáwìrì, pe 112 tàbí lọ sí ilé ìwòsàn lẹ́sẹ̀kẹsẹ̀.",
     "tryThese": "Gbìyànjú àwọn wọ̀nyí:",
     "placeholder": "Ṣàpèjúwe àmì àrùn rẹ tàbí béèrè ìbéèrè ìlera...",
@@ -204,8 +209,11 @@
   },
   "patient": {
     "title": "Àkọsílẹ̀ Aláìsàn",
+    "myProfileTitle": "Profaịlụ Mi",
     "signInRequired": "A nílò wíwọlé",
     "authRequired": "Àkọsílẹ̀ aláìsàn nílò ìfẹ̀sẹ̀múlẹ̀.",
+    "notFoundTitle": "A kò rí profaịlụ",
+    "notFoundBody": "Nọ́mbà aláìsàn yẹn kò bá àkọọ́lẹ̀ rẹ mu. Jọ̀wọ́ ṣí profaịlụ tìrẹ láti Àkọọ́lẹ̀.",
     "loadingDemographics": "Àwọn àlàyé aláìsàn ń gbékalẹ̀...",
     "observations": "Àwọn àkíyèsí",
     "medications": "Oògùn",
@@ -217,6 +225,7 @@
     "noMedications": "Kò sí oògùn fún aláìsàn yìí.",
     "noReports": "Kò sí ìròyìn fún aláìsàn yìí.",
     "born": "A bí ni {date}",
+    "yourPatientId": "Nọ́mbà aláìsàn rẹ",
     "id": "Nọ́mbà: {id}",
     "prescribed": "A kọ oògùn {date}",
     "unknown": "Aìmọ̀"

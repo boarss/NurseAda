@@ -13,13 +13,6 @@ vi.mock("@/lib/api", async () => {
       reply:
         "Here is some guidance.\n\nThis is not a substitute for professional medical advice. Please consult a healthcare provider for diagnosis and treatment. In an emergency, seek care immediately.",
     }),
-    getPatient: vi.fn().mockResolvedValue({
-      resourceType: "Patient",
-      id: "123",
-      name: [{ given: ["Test"], family: "User" }],
-      birthDate: "1990-01-01",
-      gender: "female",
-    }),
   };
 });
 

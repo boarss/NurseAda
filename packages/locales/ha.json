@@ -34,7 +34,8 @@
     "toastReminderDeleted": "An cire tunatarwa",
     "toastInteractionDone": "An gama binciken hulɗa",
     "toastAppointmentRequested": "An aiko buƙatar alƙawari",
-    "toastAppointmentCancelled": "An soke alƙawari"
+    "toastAppointmentCancelled": "An soke alƙawari",
+    "copyFailed": "Ba a iya kwafa ba"
   },
   "home": {
     "tagline": "Kula da lafiya, yadda kake so",
@@ -43,15 +44,19 @@
     "medications": "Magunguna",
     "appointments": "Alƙawari"
   },
+  "account": {
+    "title": "Asusu",
+    "patientIdLabel": "Lambar majinyacinka",
+    "patientIdHelp": "Yi amfani da wannan lamba idan kana tuntuɓar tallafi. Ba ta ba da damar shiga bayananka.",
+    "copy": "Kwafa",
+    "copied": "An kwafa"
+  },
   "chat": {
     "title": "Yi hira da NurseAda",
     "remedies": "Magunguna na gargajiya",
     "medications": "Magunguna",
     "appointments": "Alƙawari",
-    "patientId": "Lambar majinyaci",
-    "patientIdLabel": "Lambar majinyaci don bayanan asibiti",
-    "viewProfile": "Duba bayanan majinyaci",
-    "patient": "Majinyaci:",
+    "yourPatientId": "Lambar majinyacinka",
     "emptyState": "Bayyana alamomin rashin lafiyarka, tambaya game da magunguna, ko nemi jagorar lafiya. Idan gaggawa ce, kira 112 ko je asibiti nan take.",
     "tryThese": "Gwada waɗannan:",
     "placeholder": "Bayyana alamominka ko yi tambayar lafiya...",
@@ -204,8 +209,11 @@
   },
   "patient": {
     "title": "Bayanan Majinyaci",
+    "myProfileTitle": "Bayanan Asusu",
     "signInRequired": "Ana buƙatar shiga",
     "authRequired": "Bayanan majinyaci suna buƙatar tabbatarwa.",
+    "notFoundTitle": "Ba a sami bayanan ba",
+    "notFoundBody": "Wannan lambar majinyaci ba ta dace da asusunka ba. Ka buɗe naka daga Asusu.",
     "loadingDemographics": "Ana lodi bayanan majinyaci...",
     "observations": "Bincike",
     "medications": "Magunguna",
@@ -217,6 +225,7 @@
     "noMedications": "Babu maganin da aka samu don wannan majinyaci.",
     "noReports": "Babu rahoton da aka samu don wannan majinyaci.",
     "born": "An haife shi {date}",
+    "yourPatientId": "Lambar majinyacinka",
     "id": "Lamba: {id}",
     "prescribed": "An rubuta magani {date}",
     "unknown": "Ba a sani ba"

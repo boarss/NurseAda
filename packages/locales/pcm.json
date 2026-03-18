@@ -34,7 +34,8 @@
     "toastReminderDeleted": "Reminder don remove",
     "toastInteractionDone": "Interaction check don complete",
     "toastAppointmentRequested": "Appointment request don send",
-    "toastAppointmentCancelled": "Appointment don cancel"
+    "toastAppointmentCancelled": "Appointment don cancel",
+    "copyFailed": "Copy no work"
   },
   "home": {
     "tagline": "Healthcare, your own way",
@@ -43,15 +44,19 @@
     "medications": "Medicine",
     "appointments": "Appointment"
   },
+  "account": {
+    "title": "Account",
+    "patientIdLabel": "Your Patient ID",
+    "patientIdHelp": "Use this Patient ID when you wan contact support. E no go give person access to ya records.",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
   "chat": {
     "title": "Yarn with NurseAda",
     "remedies": "Local Remedies",
     "medications": "Medicine",
     "appointments": "Appointment",
-    "patientId": "Patient ID",
-    "patientIdLabel": "Patient ID for hospital record",
-    "viewProfile": "Check patient profile",
-    "patient": "Patient:",
+    "yourPatientId": "Your Patient ID",
     "emptyState": "Tell me how you dey feel, ask about medicine, or get health advice. If e be emergency, call 112 or go hospital sharp sharp.",
     "tryThese": "You fit try these:",
     "placeholder": "Tell me how you dey feel or ask health question...",
@@ -204,8 +209,11 @@
   },
   "patient": {
     "title": "Patient Profile",
+    "myProfileTitle": "My Profile",
     "signInRequired": "You need to log in",
     "authRequired": "Patient record need authentication.",
+    "notFoundTitle": "Profile no dey",
+    "notFoundBody": "That Patient ID no match your account. Abeg open your own profile for Account.",
     "loadingDemographics": "Patient info dey load...",
     "observations": "Observations",
     "medications": "Medicine",
@@ -217,6 +225,7 @@
     "noMedications": "No medicine dey for this patient.",
     "noReports": "No report dey for this patient.",
     "born": "Born {date}",
+    "yourPatientId": "Your Patient ID",
     "id": "ID: {id}",
     "prescribed": "Doctor prescribe am {date}",
     "unknown": "Unknown"
