@@ -3,7 +3,9 @@ Herbal and natural remedy content for NurseAda.
 Evidence-based traditional remedies with clinical validation (Nigeria/Africa context).
 PRD: bitter leaf for malaria prophylaxis, ginger for nausea, etc.
 """
+import os
 from dataclasses import dataclass
+from app.supabase_rest import fetch_rows, supabase_configured
 
 
 @dataclass
@@ -587,6 +589,94 @@ DRUG_HERB_INTERACTIONS: list[tuple[list[str], list[str], str, str]] = [
     ),
 ]
 
+HERBAL_SOURCE = (os.getenv("KNOWLEDGE_HERBAL_SOURCE") or "memory").strip().lower()
+
+
+def _extract_herb_name(text: str, condition: str = "") -> str:
+    if "**" in text:
+        parts = text.split("**")
+        if len(parts) > 2:
+            return parts[1].split(":")[0].strip().lower()
+    return condition.lower()
+
+
+def _fetch_herbal_content_from_supabase() -> list[HerbalChunk] | None:
+    if not supabase_configured():
+        return None
+
+    rows = fetch_rows(
+        "herbal_remedies",
+        {
+            "select": "text,source,keywords,condition,evidence_level,contraindications,drug_interactions,blocked_populations",
+            "is_active": "eq.true",
+            "order": "created_at.asc",
+        },
+    )
+    if rows is None:
+        return None
+
+    chunks: list[HerbalChunk] = []
+    for row in rows:
+        text = str(row.get("text") or "").strip()
+        if not text:
+            continue
+        chunks.append(
+            HerbalChunk(
+                text=text,
+                source=str(row.get("source") or "herbal"),
+                keywords=[str(k).lower() for k in (row.get("keywords") or []) if str(k).strip()],
+                condition=str(row.get("condition") or "general"),
+                evidence_level=str(row.get("evidence_level") or "limited"),
+                contraindications=[str(c) for c in (row.get("contraindications") or []) if str(c).strip()],
+                drug_interactions=[str(d) for d in (row.get("drug_interactions") or []) if str(d).strip()],
+                blocked_populations=[str(p) for p in (row.get("blocked_populations") or []) if str(p).strip()],
+            )
+        )
+    return chunks
+
+
+def _fetch_interaction_rules_from_supabase() -> list[tuple[list[str], list[str], str, str]] | None:
+    if not supabase_configured():
+        return None
+
+    rows = fetch_rows(
+        "herbal_drug_interaction_rules",
+        {
+            "select": "herb_keywords,drug_keywords,severity,message_template",
+            "is_active": "eq.true",
+            "order": "created_at.asc",
+        },
+    )
+    if rows is None:
+        return None
+
+    rules: list[tuple[list[str], list[str], str, str]] = []
+    for row in rows:
+        herbs = [str(h).lower() for h in (row.get("herb_keywords") or []) if str(h).strip()]
+        drugs = [str(d).lower() for d in (row.get("drug_keywords") or []) if str(d).strip()]
+        severity = str(row.get("severity") or "").strip().lower()
+        template = str(row.get("message_template") or "").strip()
+        if not herbs or not drugs or not severity or not template:
+            continue
+        rules.append((herbs, drugs, severity, template))
+    return rules
+
+
+def _get_herbal_content() -> list[HerbalChunk]:
+    if HERBAL_SOURCE == "supabase" and supabase_configured():
+        rows = _fetch_herbal_content_from_supabase()
+        if rows is not None:
+            return rows
+    return HERBAL_CONTENT
+
+
+def _get_interaction_rules() -> list[tuple[list[str], list[str], str, str]]:
+    if HERBAL_SOURCE == "supabase" and supabase_configured():
+        rules = _fetch_interaction_rules_from_supabase()
+        if rules is not None:
+            return rules
+    return DRUG_HERB_INTERACTIONS
+
 
 # ── Blocked populations and safety rules ───────────────────────────────────
 POPULATION_LABELS = {
@@ -638,7 +728,7 @@ def check_drug_herb_interactions(
     herb_lower = herb_name.lower()
     med_text = " ".join(medications or []).lower() + " " + query.lower()
     results: list[dict] = []
-    for herbs, drugs, severity, template in DRUG_HERB_INTERACTIONS:
+    for herbs, drugs, severity, template in _get_interaction_rules():
         if not any(h in herb_lower for h in herbs):
             continue
         matched_herb = next((h for h in herbs if h in herb_lower), herb_name)
@@ -657,7 +747,7 @@ def get_herbal_catalog(condition: str = "") -> list[dict]:
     """Return all herbal entries for browsing, optionally filtered by condition."""
     cond = condition.strip().lower()
     results: list[dict] = []
-    for c in HERBAL_CONTENT:
+    for c in _get_herbal_content():
         if cond and cond not in c.condition.lower() and not any(cond in kw for kw in c.keywords):
             continue
         results.append({
@@ -700,7 +790,7 @@ def retrieve_herbal_for_symptoms(
     scored: list[tuple[float, HerbalChunk]] = []
     q_words = set(w for w in q.split() if len(w) > 2)
 
-    for chunk in HERBAL_CONTENT:
+    for chunk in _get_herbal_content():
         if detected_pops & set(chunk.blocked_populations):
             continue
         score = 0.0
@@ -718,11 +808,7 @@ def retrieve_herbal_for_symptoms(
 
     results: list[dict] = []
     for _, c in scored[:top_k]:
-        interactions = check_drug_herb_interactions(
-            c.text.split("**")[1] if "**" in c.text else c.condition,
-            medications,
-            query,
-        )
+        interactions = check_drug_herb_interactions(_extract_herb_name(c.text, c.condition), medications, query)
         results.append({
             "text": c.text,
             "source": c.source,

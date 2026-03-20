@@ -4,6 +4,7 @@ so users always receive medical advice when describing symptoms.
 """
 import re
 from dataclasses import dataclass
+from app.clinical.red_flags import match_red_flags
 
 
 @dataclass
@@ -13,6 +14,7 @@ class FallbackTriageResult:
     inferred_codes: list[dict]
     confidence: float
     reasoning: str
+    red_flags: list[dict] | None = None
 
 
 # Symptom patterns → (severity, code, display, suggestion)
@@ -51,9 +53,11 @@ def run_fallback_triage(query: str) -> FallbackTriageResult:
             inferred_codes=[DEFAULT_CODE],
             confidence=0.0,
             reasoning="I didn't receive enough detail to assess.",
+            red_flags=None,
         )
 
     severity_order = {"emergency": 4, "high": 3, "medium": 2, "low": 1}
+    red_flags = match_red_flags(text)
     matched_severity = DEFAULT_SEVERITY
     matched_suggestions: list[str] = []
     matched_codes: list[dict] = []
@@ -67,10 +71,25 @@ def run_fallback_triage(query: str) -> FallbackTriageResult:
             matched_codes.append({"system": "ICD-10", "code": code, "display": display})
             reasoning_parts.append(f"Your description suggests {display} ({severity} severity).")
 
+    if any(flag.get("tier") == "emergency" for flag in red_flags):
+        if severity_order["emergency"] > severity_order.get(matched_severity, 0):
+            matched_severity = "emergency"
+        matched_suggestions.append("Seek emergency care now. Call 112 or go to the nearest emergency department.")
+    elif (
+        any(flag.get("tier") == "urgent" for flag in red_flags)
+        and severity_order["high"] > severity_order.get(matched_severity, 0)
+    ):
+        matched_severity = "high"
+        matched_suggestions.append("This symptom pattern needs urgent in-person assessment today.")
+
+    for flag in red_flags:
+        reasoning_parts.append(f"Red flag recognized: {flag.get('label', 'serious symptom')}.")
+
     if not matched_suggestions:
         matched_suggestions = [DEFAULT_SUGGESTION]
         matched_codes = [DEFAULT_CODE]
-        reasoning_parts = ["I'm giving general guidance based on what you shared."]
+        if not reasoning_parts:
+            reasoning_parts = ["I'm giving general guidance based on what you shared."]
 
     confidence = 0.7 if matched_codes and matched_codes[0] != DEFAULT_CODE else 0.4
     if matched_severity == "emergency":
@@ -82,4 +101,5 @@ def run_fallback_triage(query: str) -> FallbackTriageResult:
         inferred_codes=matched_codes,
         confidence=confidence,
         reasoning=" ".join(reasoning_parts) if reasoning_parts else "General assessment.",
+        red_flags=red_flags or None,
     )

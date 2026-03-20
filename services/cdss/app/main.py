@@ -36,6 +36,9 @@ def triage(req: TriageRequest):
         "inferred_codes": result.inferred_codes,
         "confidence": result.confidence,
         "reasoning": result.reasoning,
+        "severity_probabilities": result.severity_probabilities,
+        "red_flags": result.red_flags or [],
+        "shap": result.shap,
     }
 
 

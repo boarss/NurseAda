@@ -21,7 +21,7 @@ alwaysApply: false
 
 | Service | Endpoint | Request | Response |
 |---------|----------|---------|----------|
-| CDSS | POST /triage | `{query, context}` | `{severity, suggestions, inferred_codes, confidence, reasoning}` |
+| CDSS | POST /triage | `{query, context}` | `{severity, suggestions, inferred_codes, confidence, reasoning, severity_probabilities?, red_flags?, shap?}` |
 | CDSS | POST /code-check | `{agent_id, query, context}` | `{ok, reason, resolved_codes, agent_id}` |
 | CDSS | POST /drug-interactions | `{query, patient_id?}` | `{interactions, warnings, codes_checked}` |
 | Knowledge | POST /retrieve | `{query, top_k}` | `{chunks: [{text, source}], sources}` |

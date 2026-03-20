@@ -107,7 +107,26 @@ Everything else in the table below is **optional** and only needed when you inte
 | `COMPLETION_MODEL` | Model for chat | `gpt-4o` |
 | `CORS_ALLOW_ORIGINS` | Allowed web origins | `http://localhost:3000,http://127.0.0.1:3000` |
 | `KNOWLEDGE_CLINICS_SOURCE` | Source for clinic directory (`memory` or `supabase`) | `memory` |
+| `KNOWLEDGE_CLINICAL_SOURCE` | Source for clinical chunks (`memory` or `supabase`) | `memory` |
+| `KNOWLEDGE_HERBAL_SOURCE` | Source for herbal catalog/retrieval (`memory` or `supabase`) | `memory` |
 | `GATEWAY_ADMIN_EMAILS` | Comma-separated list of admin emails for clinic management | — |
+
+---
+
+## Supabase medical knowledge (tables & seed)
+
+Clinical and herbal reference content can live in Supabase (tables `medical_knowledge_chunks`, `herbal_remedies`, `herbal_drug_interaction_rules`). Migrations live under `drsmfhkgwohtbyhfpxqu/supabase/migrations/`:
+
+- `20260320130000_medical_knowledge.sql` — schema, RLS, indexes
+- `20260320131000_medical_knowledge_seed.sql` — seed from current in-repo Python content
+
+**Regenerate the seed file** after editing `services/knowledge/app/clinical_content.py` or `services/knowledge/app/herbal_content.py` (from repo root):
+
+```powershell
+python scripts/generate_medical_knowledge_seed.py
+```
+
+Then apply migrations with your usual Supabase workflow (`supabase db push`, hosted SQL editor, or CI).
 
 ---
 
@@ -115,9 +134,24 @@ Everything else in the table below is **optional** and only needed when you inte
 
 Use `.env.production.example` as a template. Key differences:
 
-- `NEXT_PUBLIC_GATEWAY_URL` → your deployed gateway (e.g. `https://nurseada-gateway.onrender.com`)
+- `NEXT_PUBLIC_GATEWAY_URL` → your deployed gateway (e.g. `https://nurseada-gateway.onrender.com`), **or** use the Next.js proxy (recommended on Vercel; see below)
 - `CORS_ALLOW_ORIGINS` → include your Vercel domain
 - Set all Supabase and OpenAI keys in your hosting dashboard (Vercel, Render, EAS)
+
+### Vercel: gateway via `/api/gateway` (same-origin)
+
+The web app can call the gateway through a server-side proxy so the browser only talks to your Vercel domain (avoids exposing a separate gateway origin and simplifies CORS).
+
+**Vercel project (Next.js) environment variables:**
+
+| Variable | Visibility | Example |
+|----------|------------|---------|
+| `NEXT_PUBLIC_GATEWAY_URL` | Client | `/api/gateway` |
+| `GATEWAY_URL` | Server only | `https://nurseada-gateway.onrender.com` (no trailing slash) |
+
+Chat, herbal catalog, medications, appointments, feedback, and admin routes all use `lib/api.ts`, which resolves URLs from `NEXT_PUBLIC_GATEWAY_URL`. When it starts with `/`, requests go to `/api/gateway/...` on Vercel and are forwarded to `GATEWAY_URL`.
+
+**Pinecone recommendations** stay on the existing route `GET /api/recommendations` (server-only `PINECONE_*` keys on Vercel).
 
 ---
 
@@ -125,8 +159,10 @@ Use `.env.production.example` as a template. Key differences:
 
 | Issue | Fix |
 |-------|-----|
-| "Gateway not found" | Ensure gateway is running and `NEXT_PUBLIC_GATEWAY_URL` matches (8080 for start-dev-all) |
+| "Gateway not found" | Ensure gateway is running and `NEXT_PUBLIC_GATEWAY_URL` matches (8080 for start-dev-all). On Vercel with `/api/gateway`, set server `GATEWAY_URL` to the real gateway. |
+| "Gateway proxy is not configured" (503 from `/api/gateway`) | Set `GATEWAY_URL` on the Vercel project (server env), not only `NEXT_PUBLIC_*`. |
 | Chat returns errors | Set `OPENAI_API_KEY` and ensure LLM gateway is running (port 8001) |
 | Sign-in doesn't work | Set all `SUPABASE_*` and `NEXT_PUBLIC_SUPABASE_*` vars |
 | Herbal remedies empty | Set `GATEWAY_KNOWLEDGE_URL` and run Knowledge service (8003) |
+| Knowledge service Supabase source not loading | Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; then set `KNOWLEDGE_CLINICAL_SOURCE` / `KNOWLEDGE_HERBAL_SOURCE` / `KNOWLEDGE_CLINICS_SOURCE` to `supabase` |
 | CORS errors in browser | Add your frontend URL to `CORS_ALLOW_ORIGINS` |

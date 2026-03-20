@@ -1,6 +1,6 @@
 # NurseAda - Product Requirements Document
 
-**AI-Powered 24/7 Virtual Healthcare Assistant for Primary Care Users in Nigeria and Africa**
+**AI-Powered 24/7 Virtual Healthcare Assistant for Primary Care Users in Nigeria and Africa, that operates independently as a primary care network**
 
 ---
 
@@ -17,6 +17,15 @@
 | 7 | **Administrative Burden** | Long wait times, complex booking processes |
 | 8 | **Provider Shortages** | Insufficient healthcare workforce to meet demand |
 
+## 1.1 User Stories
+
+User1: As a user, I can conveniently make medical enquiries about sudden ailments, diseases, sicknesses to know my faith and if at all I need to visit the hospice for proper medical checkup.
+
+User2: As a user, If I feel a sscertain way, I would like a chatbot that can make quick and accurate recommendatios that operates independently.
+
+User3: As a user, I need herbal recommendations for certain illnesses that do not require me taking drugs. Just a few herbs that can cure my ailment.
+
+User4: As a user, I would like a chatbot that is not only professioanl-like medical practitioners but converasational, something that makes me feel safe and well-taken caref of. 
 ---
 
 ## 2. Technical Implementation
@@ -59,7 +68,7 @@
 | **Database** | PostgreSQL (structured data), MongoDB (conversations), Redis (caching) |
 | **Cloud Infrastructure** | AWS (primary), Azure (backup), Vercel ,Google Cloud (optional) |
 | **CDN & Storage** | AWS CloudFront, S3, Google Cloud Storage |
-| **Healthcare Integrations** | Optional (Phase 2+): HL7 FHIR, OpenEHR, SMART on FHIR for sites that support deep integration |
+| **Healthcare Integrations** | Optional (Phase 2+): Operates independently thorugh web search and medical knowledge|
 | **Authentication** | OAuth 2.0, JWT, Firebase Auth |
 | **Analytics** | Mixpanel, Amplitude, Datadog |
 
@@ -70,7 +79,6 @@ For the initial production phase, NurseAda is designed to run as an **independen
 - **Minimal stack (default)**  
   - Clients: Web (Next.js), Mobile (React Native/Expo)  
   - Services: API Gateway (NurseAda gateway), Knowledge service, Supabase (PostgreSQL), LLM gateway  
-  - Optional: FHIR, external CDSS, XAI, hospital/EHR integrations (see “Optional Integrations” below)
 
 - **Primary care network model**  
   - Clinics are stored in NurseAda’s own database (`clinics` table in Supabase), seeded from curated static content.  
@@ -78,7 +86,6 @@ For the initial production phase, NurseAda is designed to run as an **independen
   - Herbal and natural remedy flows call only the NurseAda knowledge service; there is no dependency on hospital/FMC herbal APIs.
 
 - **External systems as extensions**  
-  - HL7 FHIR, external CDSS, radiology PACS, and hospital/FMC APIs are treated as **optional Phase 2+ integrations**, layered on top of the independent core.  
   - The independent mode must remain functional and safe when all external systems are disabled.
 
 ### 2.5 System Architecture
@@ -112,7 +119,7 @@ For the initial production phase, NurseAda is designed to run as an **independen
 │                      KNOWLEDGE LAYER                                 │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌───────────────────┐   │
 │  │ Vector DB       │  │ Medical KB      │  │ Herbal/Natural    │   │
-│  │ (Pinecone)      │  │ (FHIR/Graph)    │  │ Products DB       │   │
+│  │ (Pinecone)      │  │ (Graph)         │  │ Products DB       │   │
 │  └─────────────────┘  └─────────────────┘  └───────────────────┘   │
 └─────────────────────────────────────────────────────────────────────┘
                                 │
@@ -141,10 +148,10 @@ For the initial production phase, NurseAda is designed to run as an **independen
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     EXTERNAL INTEGRATIONS                            │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌───────────┐  │
-│  │ EHR Systems │  │ Pharmacies  │  │ Labs        │  │ Emergency │  │
-│  │ (HL7 FHIR)  │  │ (API)       │  │ (API)       │  │ Services  │  │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └───────────┘  │
+│                   ┌─────────────┐  ┌─────────────┐  ┌───────────┐  │
+│                   │ Pharmacies  │  │ Labs        │  │ Emergency │  │
+│                   │ (API)       │  │ (API)       │  │ Services  │  │
+│                   └─────────────┘  └─────────────┘  └───────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -152,7 +159,7 @@ In **Independent Primary Care Network Mode (default)**, the core architecture is
 
 - `web + mobile → NurseAda API gateway → (knowledge service + Supabase + LLM gateway)`
 
-FHIR, external CDSS, hospital EHRs, lab systems, and imaging PACS integrate into this base as **optional downstream services**. The system MUST be deployable and clinically usable with only the independent core running.
+ The system MUST be deployable and clinically usable with only the independent core running.
 
 ### 2.6 Infrastructure
 
@@ -199,7 +206,24 @@ FHIR, external CDSS, hospital EHRs, lab systems, and imaging PACS integrate into
   - NurseAda gateway and knowledge services
   - Supabase (users, appointments, clinics, reminders)
   - LLM gateway (or rule-based fallbacks)
-- When optional integrations (FHIR, external CDSS, XAI, hospital EHRs) are enabled, they enhance assessments and documentation but do not become hard dependencies for basic safe operation.
+- When optional integrations (external CDSS, XAI, hospital EHRs) are enabled, they enhance assessments and documentation but do not become hard dependencies for basic safe operation.
+
+### Core UI data powering (Independent Mode)
+
+In Independent Primary Care Network Mode, the core web pages fetch data end-to-end using NurseAda-owned services:
+
+- Chat (`/chat`): `POST /chat` in the API Gateway → Agent orchestrator → LLM gateway + Knowledge retrieval.
+- Remedies (`/remedies`): `GET /herbal/catalog` in the API Gateway → Knowledge service `GET /herbal/catalog` (in-memory herbal catalog by default).
+- Medication Reminders (`/medications` - My Reminders): API Gateway `GET/POST/PUT/DELETE /medications/reminders` backed by Supabase table `medication_reminders`.
+- Medication Interactions (`/medications` - Interaction Checker): API Gateway `POST /medications/check-interactions` backed by CDSS `/drug-interactions`.
+- Appointments (`/appointments`):
+  - My Appointments: API Gateway `GET/DELETE /appointments` backed by Supabase table `appointments`.
+  - Find a Clinic: API Gateway `GET /appointments/clinics` proxied to Knowledge `GET /clinics`.
+- Expected Supabase defaults:
+  - `appointments.status` defaults to `requested`.
+  - `medication_reminders.is_active` defaults to `true`.
+
+Operational requirement: Independent Mode must remain usable when external partner systems are disabled, provided Gateway, Knowledge, CDSS, and Supabase are reachable with configured service URLs.
 
 ### 4.2 File Uploads
 
@@ -244,7 +268,7 @@ FHIR, external CDSS, hospital EHRs, lab systems, and imaging PACS integrate into
 ### 5.1 Deployment Modes
 
 - **Independent Mode (default)**: No external hospital/EHR dependencies; uses NurseAda’s own primary care network and data stores.
-- **Integrated Mode (optional)**: Adds FHIR/EHR, external CDSS, and XAI integrations where partner infrastructure allows, without breaking Independent Mode guarantees.
+- **Integrated Mode (optional)**: external CDSS, and XAI integrations where partner infrastructure allows, without breaking Independent Mode guarantees.
 ---
 
 ## 6. Success Metrics

@@ -3,7 +3,7 @@ Medication agent: drug info, interactions, formulary (FHIR + pharmacy APIs).
 """
 import httpx
 from app.agents.base import BaseAgent, AgentResult
-from app.config import GATEWAY_FHIR_URL, GATEWAY_CDSS_URL, PHARMACY_API_URL
+from app.config import GATEWAY_CDSS_URL, PHARMACY_API_URL
 from app.services.verification import get_standard_disclaimer
 from app.services.discourse import t as discourse_t
 
@@ -23,22 +23,9 @@ class MedicationAgent(BaseAgent):
         context: dict | None = None,
     ) -> AgentResult:
         context = context or {}
-        patient_id = context.get("patient_id")
         locale = context.get("locale", "en")
-        # Optional: current medications from FHIR
+        # Independence policy: do not fetch or reference external EHR/FHIR medication lists.
         current_meds_note = ""
-        if patient_id and GATEWAY_FHIR_URL:
-            try:
-                async with httpx.AsyncClient() as client:
-                    r = await client.get(
-                        f"{GATEWAY_FHIR_URL.rstrip('/')}/MedicationRequest",
-                        params={"patient": patient_id},
-                        timeout=10.0,
-                    )
-                    if r.status_code == 200:
-                        current_meds_note = " [Current medications from record may be considered.]"
-            except Exception:
-                pass
 
         if not GATEWAY_CDSS_URL and not PHARMACY_API_URL:
             return AgentResult(
@@ -54,7 +41,7 @@ class MedicationAgent(BaseAgent):
                 async with httpx.AsyncClient() as client:
                     r = await client.post(
                         f"{GATEWAY_CDSS_URL.rstrip('/')}/drug-interactions",
-                        json={"query": user_message, "patient_id": patient_id},
+                        json={"query": user_message},
                         timeout=10.0,
                     )
                     if r.status_code == 200:
@@ -97,7 +84,6 @@ class MedicationAgent(BaseAgent):
         content = (
             interactions_text
             or discourse_t("could_not_match", locale)
-            + current_meds_note
             + get_standard_disclaimer()
         )
         return AgentResult(content=content, agent_id=self.agent_id, sources=[])

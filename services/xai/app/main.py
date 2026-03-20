@@ -14,7 +14,7 @@ from app.models import (
     tree_structure,
     lr_coefficients,
 )
-from app.explainers import shap_values_dt, lime_explanation, feature_vector_from_symptoms
+from app.explainers import shap_values_dt, shap_values_lr, lime_explanation, feature_vector_from_symptoms
 from app.visualize import symptom_heatmap_data, symptom_heatmap_png, saliency_map_tabular, saliency_map_radiology_placeholder
 
 app = FastAPI(
@@ -85,7 +85,11 @@ def explain_shap(req: ExplainRequest):
     if vec.ndim == 1:
         vec = vec.reshape(1, -1)
     try:
-        out = shap_values_dt(vec[0])
+        mt = (req.model_type or "tree").strip().lower()
+        if mt == "logistic":
+            out = shap_values_lr(vec[0])
+        else:
+            out = shap_values_dt(vec[0])
         return out
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

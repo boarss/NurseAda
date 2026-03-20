@@ -16,10 +16,12 @@ router = APIRouter()
 
 
 def _require_fhir() -> str:
+    # FHIR/EHR is disabled in NurseAda v2. Return 404 to ensure the proxy endpoints
+    # cannot be used even if this router is re-registered.
     if not GATEWAY_FHIR_URL:
         raise HTTPException(
-            status_code=503,
-            detail="Patient data is not configured (GATEWAY_FHIR_URL not set)",
+            status_code=404,
+            detail="Not found",
         )
     return GATEWAY_FHIR_URL.rstrip("/")
 

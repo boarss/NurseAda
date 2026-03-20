@@ -9,6 +9,7 @@ def test_detect_intent_emergency():
     assert _detect_intent("I have chest pain") == "emergency"
     assert _detect_intent("can't breathe") == "emergency"
     assert _detect_intent("emergency!") == "emergency"
+    assert _detect_intent("my face is drooping and speech is slurred") == "emergency"
 
 
 def test_detect_intent_medication():

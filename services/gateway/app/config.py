@@ -17,7 +17,9 @@ def _str(key: str, default: str = "") -> str:
 
 
 # Optional backend URLs (default to empty string if unset)
-GATEWAY_FHIR_URL = _url("GATEWAY_FHIR_URL")
+# FHIR/EHR is intentionally disabled for NurseAda v2 independence.
+# Even if GATEWAY_FHIR_URL is set in the environment, the gateway will not use it.
+GATEWAY_FHIR_URL = ""
 GATEWAY_CDSS_URL = _url("GATEWAY_CDSS_URL")
 GATEWAY_LLM_URL = _url("GATEWAY_LLM_URL")
 GATEWAY_KNOWLEDGE_URL = _url("GATEWAY_KNOWLEDGE_URL")

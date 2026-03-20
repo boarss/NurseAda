@@ -13,6 +13,7 @@ from app.models import (
 
 # Lazy init
 _shap_explainer_dt = None
+_shap_explainer_lr = None
 _lime_explainer = None
 _X_background = None
 
@@ -46,6 +47,35 @@ def shap_values_dt(instance: np.ndarray) -> dict:
         "shap_values": values,
         "prediction_class": int(decision_tree().predict(instance_2d)[0]),
         "prediction_label": SEVERITY_CLASSES[int(decision_tree().predict(instance_2d)[0])],
+    }
+
+
+def shap_values_lr(instance: np.ndarray) -> dict:
+    """SHAP values for scaled logistic regression (multiclass severity)."""
+    import shap
+
+    global _shap_explainer_lr
+    clf, scaler = logistic_regression()
+    X_bg = _get_background()
+    X_bg_scaled = scaler.transform(X_bg)
+    if _shap_explainer_lr is None:
+        _shap_explainer_lr = shap.LinearExplainer(clf, X_bg_scaled)
+    instance_2d = instance.reshape(1, -1) if instance.ndim == 1 else instance
+    instance_scaled = scaler.transform(instance_2d)
+    sv = _shap_explainer_lr.shap_values(instance_scaled)
+    pred = int(clf.predict(instance_scaled)[0])
+    if isinstance(sv, list):
+        values = sv[pred][0].tolist()
+    elif isinstance(sv, np.ndarray) and sv.ndim == 3:
+        values = sv[0, :, pred].tolist()
+    else:
+        values = np.asarray(sv, dtype=float).reshape(-1).tolist()
+    return {
+        "feature_names": FEATURE_NAMES,
+        "shap_values": values,
+        "model": "logistic",
+        "prediction_class": pred,
+        "prediction_label": SEVERITY_CLASSES[pred],
     }
 
 

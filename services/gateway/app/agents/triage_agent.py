@@ -4,7 +4,8 @@ Uses fallback triage when CDSS is not configured. Enriches with herbal/natural r
 """
 import httpx
 from app.agents.base import BaseAgent, AgentResult
-from app.config import GATEWAY_CDSS_URL, GATEWAY_FHIR_URL, GATEWAY_KNOWLEDGE_URL
+from app.clinical import extract_symptoms, generate_response
+from app.config import GATEWAY_CDSS_URL, GATEWAY_KNOWLEDGE_URL
 from app.services.verification import get_standard_disclaimer
 from app.services.fallback_triage import run_fallback_triage
 from app.services.discourse import format_triage_response, format_appointment_followup, t as discourse_t
@@ -66,21 +67,15 @@ class TriageAgent(BaseAgent):
         context: dict | None = None,
     ) -> AgentResult:
         context = context or {}
-        patient_id = context.get("patient_id")
         locale = context.get("locale", "en")
-        observations_note = ""
-        if patient_id and GATEWAY_FHIR_URL:
-            try:
-                async with httpx.AsyncClient() as client:
-                    r = await client.get(
-                        f"{GATEWAY_FHIR_URL.rstrip('/')}/Observation",
-                        params={"patient": patient_id},
-                        timeout=10.0,
-                    )
-                    if r.status_code == 200:
-                        observations_note = " [EHR context available]"
-            except Exception:
-                pass
+
+        # Independence policy: do not pass external identifiers to downstream services.
+        # (Even if `patient_id` exists in context, triage is based on NurseAda knowledge and user message.)
+        sanitized_context = {**context}
+        sanitized_context.pop("patient_id", None)
+        extracted_symptoms = await extract_symptoms(user_message, sanitized_context)
+        pipeline_context = {**sanitized_context, "extracted_symptoms": extracted_symptoms}
+
         if not GATEWAY_CDSS_URL:
             result = run_fallback_triage(user_message)
             content = format_triage_response(
@@ -91,21 +86,52 @@ class TriageAgent(BaseAgent):
                 inferred_codes=result.inferred_codes,
                 locale=locale,
             )
-            content, sources = await _append_herbal_if_available(content, user_message, ["Fallback triage"], result.severity, context)
+            artifact = {
+                "severity": result.severity,
+                "confidence": result.confidence,
+                "reasoning": result.reasoning,
+                "suggestions": result.suggestions,
+                "inferred_codes": result.inferred_codes,
+                "red_flags": result.red_flags or [],
+            }
+            content = await generate_response(artifact, locale=locale)
+            content, sources = await _append_herbal_if_available(
+                content,
+                user_message,
+                ["Fallback triage"],
+                result.severity,
+                pipeline_context,
+            )
             if result.severity not in ("emergency",):
                 content += format_appointment_followup(result.severity, locale)
             return AgentResult(
                 content=content + get_standard_disclaimer(),
                 agent_id=self.agent_id,
                 sources=sources,
-                metadata={"severity": result.severity, "suggestions": result.suggestions},
+                metadata={
+                    "severity": result.severity,
+                    "suggestions": result.suggestions,
+                    "clinical_trace": {
+                        "extracted_symptoms": extracted_symptoms,
+                        "diagnosis": {
+                            "severity": result.severity,
+                            "reasoning": result.reasoning,
+                            "inferred_codes": result.inferred_codes,
+                            "confidence": result.confidence,
+                            "red_flags": result.red_flags or [],
+                            "shap": None,
+                        },
+                        "recommendations": result.suggestions,
+                        "red_flags": result.red_flags or [],
+                    },
+                },
             )
 
         try:
             async with httpx.AsyncClient() as client:
                 r = await client.post(
                     f"{GATEWAY_CDSS_URL.rstrip('/')}/triage",
-                    json={"query": user_message, "context": context},
+                    json={"query": user_message, "context": pipeline_context},
                     timeout=15.0,
                 )
                 if r.status_code != 200:
@@ -120,23 +146,46 @@ class TriageAgent(BaseAgent):
                 confidence = data.get("confidence")
                 reasoning = data.get("reasoning", "")
                 inferred_codes = data.get("inferred_codes", [])
-                content = format_triage_response(
-                    severity=severity,
-                    confidence=confidence,
-                    reasoning=reasoning,
-                    suggestions=suggestions,
-                    inferred_codes=inferred_codes,
-                    observations_note=observations_note.strip(),
-                    locale=locale,
+                red_flags = data.get("red_flags", [])
+                shap_payload = data.get("shap")
+                artifact = {
+                    "severity": severity,
+                    "confidence": confidence,
+                    "reasoning": reasoning,
+                    "suggestions": suggestions,
+                    "inferred_codes": inferred_codes,
+                    "red_flags": red_flags,
+                }
+                content = await generate_response(artifact, locale=locale)
+                content, sources = await _append_herbal_if_available(
+                    content,
+                    user_message,
+                    ["CDSS"],
+                    severity,
+                    pipeline_context,
                 )
-                content, sources = await _append_herbal_if_available(content, user_message, ["CDSS"], severity, context)
                 if severity not in ("emergency",):
                     content += format_appointment_followup(severity, locale)
                 return AgentResult(
                     content=content + get_standard_disclaimer(),
                     agent_id=self.agent_id,
                     sources=sources,
-                    metadata=data,
+                    metadata={
+                        **data,
+                        "clinical_trace": {
+                            "extracted_symptoms": extracted_symptoms,
+                            "diagnosis": {
+                                "severity": severity,
+                                "reasoning": reasoning,
+                                "inferred_codes": inferred_codes,
+                                "confidence": confidence,
+                                "red_flags": red_flags,
+                                "shap": shap_payload,
+                            },
+                            "recommendations": suggestions,
+                            "red_flags": red_flags,
+                        },
+                    },
                 )
         except Exception as e:
             return AgentResult(

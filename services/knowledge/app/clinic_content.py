@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import os
 
-import httpx
 from dataclasses import dataclass
+from app.supabase_rest import fetch_rows, supabase_configured
 
 
 @dataclass
@@ -259,25 +259,7 @@ CLINICS: list[Clinic] = [
 ]
 
 
-SUPABASE_URL = (os.getenv("SUPABASE_URL") or "").strip()
-SUPABASE_SERVICE_ROLE_KEY = (os.getenv("SUPABASE_SERVICE_ROLE_KEY") or "").strip()
 CLINICS_SOURCE = (os.getenv("KNOWLEDGE_CLINICS_SOURCE") or "memory").strip().lower()
-_SUPABASE_TIMEOUT = 8.0
-
-
-def _supabase_configured() -> bool:
-    return bool(SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY)
-
-
-def _supabase_headers() -> dict[str, str]:
-    return {
-        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
-    }
-
-
-def _supabase_rest_url(table: str) -> str:
-    return f"{SUPABASE_URL.rstrip('/')}/rest/v1/{table}"
 
 
 def _fetch_clinics_from_supabase(
@@ -289,7 +271,7 @@ def _fetch_clinics_from_supabase(
     Read clinics from Supabase when configured.
     Falls back to None on any error so callers can use in-memory data.
     """
-    if not _supabase_configured():
+    if not supabase_configured():
         return None
 
     params: dict[str, str] = {"select": "*", "order": "state,city"}
@@ -298,16 +280,8 @@ def _fetch_clinics_from_supabase(
     if facility_type:
         params["facility_type"] = f"eq.{facility_type}"
 
-    try:
-        with httpx.Client(timeout=_SUPABASE_TIMEOUT) as client:
-            r = client.get(
-                _supabase_rest_url("clinics"),
-                headers=_supabase_headers(),
-                params=params,
-            )
-            r.raise_for_status()
-            rows: list[dict] = r.json()
-    except Exception:
+    rows = fetch_rows("clinics", params)
+    if rows is None:
         return None
 
     # Only active clinics
@@ -352,7 +326,7 @@ def get_clinic_directory(
     reads from the `clinics` table. Otherwise, it uses the in-memory CLINICS
     list defined above.
     """
-    if CLINICS_SOURCE == "supabase" and _supabase_configured():
+    if CLINICS_SOURCE == "supabase" and supabase_configured():
         rows = _fetch_clinics_from_supabase(state=state, specialty=specialty, facility_type=facility_type)
         if rows is not None:
             return rows

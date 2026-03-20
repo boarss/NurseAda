@@ -5,7 +5,6 @@ import { vi } from "vitest";
 import ChatPage from "../chat/page";
 import MedicationsPage from "../medications/page";
 import AppointmentsPage from "../appointments/page";
-import PatientProfilePage from "../patient/[id]/page";
 import { renderWithProviders } from "@/test/renderWithProviders";
 
 vi.mock("@/lib/AuthContext", async () => {
@@ -51,15 +50,6 @@ describe("Access control when signed out", () => {
 
     expect(
       screen.getByText(/sign in to view and manage your appointments/i),
-    ).toBeInTheDocument();
-  });
-
-  it("requires sign in for patient profile", () => {
-    renderWithProviders(<PatientProfilePage />);
-
-    expect(screen.getByText(/sign in required/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/patient records require authentication/i),
     ).toBeInTheDocument();
   });
 });

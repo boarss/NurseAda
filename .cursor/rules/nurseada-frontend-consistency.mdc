@@ -36,7 +36,7 @@ alwaysApply: false
 - Call `GET /appointments` for appointment list (auth required).
 - Call `POST /appointments` to create an appointment request (auth required).
 - Call `DELETE /appointments/{id}` to cancel an appointment (auth required).
-- Use `NEXT_PUBLIC_GATEWAY_URL` / `EXPO_PUBLIC_GATEWAY_URL` from env.
+- Use `NEXT_PUBLIC_GATEWAY_URL` / `EXPO_PUBLIC_GATEWAY_URL` from env. On Vercel web, `NEXT_PUBLIC_GATEWAY_URL=/api/gateway` with server `GATEWAY_URL` proxies all gateway traffic through `app/api/gateway/[...path]`.
 
 ## Localisation (i18n)
 

@@ -24,6 +24,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    clinical: dict | None = None
 
 
 @router.post("", response_model=ChatResponse)
@@ -57,5 +58,5 @@ async def chat(
         "locale": locale,
     }
 
-    reply = await orchestrator.run(user_message, context=context)
-    return ChatResponse(reply=reply)
+    response = await orchestrator.run_with_metadata(user_message, context=context)
+    return ChatResponse(reply=response.get("reply", ""), clinical=response.get("clinical"))

@@ -30,7 +30,7 @@ Recommendations:
 
 ## Intent and Code Check
 
-- Add new symptom/clinical terms to both: `orchestrator.py` (TRIAGE_PATTERNS, EMERGENCY_PATTERNS) and `services/cdss/app/code_check.py` (TRIAGE_MIN_TERMS).
+- Add new symptom/clinical terms to: `orchestrator.py` (TRIAGE_PATTERNS), `services/gateway/app/data/red_flags.json` + `services/cdss/app/data/red_flags.json` (keep parity via `scripts/verify_red_flags_parity.py`), and `services/cdss/app/code_check.py` (TRIAGE_MIN_TERMS).
 - Never block users describing symptoms—expand patterns for natural language.
 
 ## Fallback Triage

@@ -15,7 +15,7 @@ class CodeCheckResult:
 
 # Minimum symptom keywords for triage to pass code check (so we're not guessing blindly)
 TRIAGE_MIN_TERMS = re.compile(
-    r"\b(pain|fever|cough|headache|symptom|sick|hurt|ache|bleed|breath|vomit|dizzy|tired|rash|swell|diarrhea|chest|stomach|throat|nose|unwell|well|feel|nausea|weak|fatigue|ketone|ketones|dka|diabetes|blood sugar)\b",
+    r"\b(pain|fever|cough|headache|symptom|sick|hurt|ache|bleed|breath|vomit|dizzy|tired|rash|swell|diarrhea|chest|stomach|throat|nose|unwell|well|feel|nausea|weak|fatigue|ketone|ketones|dka|diabetes|blood sugar|paralysis|droop|slurred speech|hives|wheez(e|ing)|numb(ness)?|urinary retention|can'?t urinate)\b",
     re.I,
 )
 

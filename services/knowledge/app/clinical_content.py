@@ -2,7 +2,9 @@
 Clinical reference content for NurseAda (DKA, ketones, diabetes).
 Aligned with DKA playbook, ketone conversation, and pathways-to-prevention guidance.
 """
+import os
 from dataclasses import dataclass
+from app.supabase_rest import fetch_rows, supabase_configured
 
 
 @dataclass
@@ -51,6 +53,44 @@ DIABETES_CONTENT = [
 ]
 
 
+CLINICAL_SOURCE = (os.getenv("KNOWLEDGE_CLINICAL_SOURCE") or "memory").strip().lower()
+
+
+def _fetch_clinical_chunks_from_supabase() -> list[ClinicalChunk] | None:
+    if not supabase_configured():
+        return None
+
+    rows = fetch_rows(
+        "medical_knowledge_chunks",
+        {"select": "text,source,keywords", "is_active": "eq.true", "order": "created_at.asc"},
+    )
+    if rows is None:
+        return None
+
+    chunks: list[ClinicalChunk] = []
+    for row in rows:
+        text = str(row.get("text") or "").strip()
+        if not text:
+            continue
+        keywords = row.get("keywords") or []
+        chunks.append(
+            ClinicalChunk(
+                text=text,
+                source=str(row.get("source") or "clinical"),
+                keywords=[str(k).lower() for k in keywords if str(k).strip()],
+            )
+        )
+    return chunks
+
+
+def _get_clinical_chunks() -> list[ClinicalChunk]:
+    if CLINICAL_SOURCE == "supabase" and supabase_configured():
+        rows = _fetch_clinical_chunks_from_supabase()
+        if rows is not None:
+            return rows
+    return DKA_CONTENT + DIABETES_CONTENT
+
+
 def retrieve_clinical_chunks(query: str, top_k: int = 5) -> list[dict]:
     """
     Keyword-based retrieval for DKA/ketone/diabetes content.
@@ -60,7 +100,7 @@ def retrieve_clinical_chunks(query: str, top_k: int = 5) -> list[dict]:
     if not q or len(q) < 2:
         return []
 
-    all_chunks = DKA_CONTENT + DIABETES_CONTENT
+    all_chunks = _get_clinical_chunks()
     scored: list[tuple[float, ClinicalChunk]] = []
 
     for chunk in all_chunks:

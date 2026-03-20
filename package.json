@@ -14,7 +14,7 @@
     "dev:mobile": "npm run start --workspace=apps/mobile",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test:backend": "pytest services/gateway/tests services/cdss/tests services/fhir-adapter/tests",
+    "test:backend": "pytest services/cdss/tests -q && cd services/gateway && pytest tests -q && cd ../fhir-adapter && pytest tests -q",
     "test:web": "npm test --workspace=apps/web",
     "test:e2e": "npx playwright test"
   },

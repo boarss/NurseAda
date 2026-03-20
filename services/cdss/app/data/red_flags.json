@@ -1,0 +1,101 @@
+[
+  {
+    "id": "dka_crisis",
+    "label": "Possible diabetic ketoacidosis",
+    "tier": "emergency",
+    "patterns": [
+      "\\b(dka|diabetic ketoacidosis|ketoacidosis)\\b",
+      "\\b(fruity breath|kussmaul breathing?)\\b",
+      "\\b(ketones?.*(high|large|moderate)|high ketones?|large ketones?)\\b"
+    ]
+  },
+  {
+    "id": "severe_chest_or_breathing",
+    "label": "Severe chest pain or breathing distress",
+    "tier": "emergency",
+    "patterns": [
+      "\\b(chest pain|pressure in chest|tight chest)\\b",
+      "\\b(can'?t breathe|unable to breathe|severe shortness of breath)\\b"
+    ]
+  },
+  {
+    "id": "stroke_signs",
+    "label": "Possible stroke symptoms",
+    "tier": "emergency",
+    "patterns": [
+      "\\b(slurred speech|speech is slurred|speech suddenly unclear)\\b",
+      "\\b(face droop|facial droop|face is drooping|one side of face drooping)\\b",
+      "\\b(sudden weakness|one[- ]sided weakness|arm weakness)\\b",
+      "\\b(unconscious|passed out|seizure|convulsion)\\b",
+      "\\bstroke\\b"
+    ]
+  },
+  {
+    "id": "explicit_emergency_request",
+    "label": "User indicated emergency services",
+    "tier": "emergency",
+    "patterns": [
+      "\\b(emergency|911|112)\\b"
+    ]
+  },
+  {
+    "id": "severe_bleeding",
+    "label": "Severe or uncontrolled bleeding",
+    "tier": "emergency",
+    "patterns": [
+      "\\b(severe bleed(ing)?|heavy bleeding|uncontrolled bleeding)\\b",
+      "\\b(vomiting blood|coughing blood|blood in stool)\\b"
+    ]
+  },
+  {
+    "id": "anaphylaxis",
+    "label": "Possible severe allergic reaction",
+    "tier": "emergency",
+    "patterns": [
+      "\\b(anaphylaxis|throat swelling|tongue swelling)\\b",
+      "\\b(hives? with (wheez(e|ing)|breath(ing)? difficulty))\\b"
+    ]
+  },
+  {
+    "id": "self_harm_or_overdose",
+    "label": "Self-harm, suicide risk, or overdose",
+    "tier": "emergency",
+    "patterns": [
+      "\\b(suicid(e|al)|want to die|kill myself|self harm)\\b",
+      "\\b(overdose|took too many pills|poisoning)\\b"
+    ]
+  },
+  {
+    "id": "thunderclap_headache",
+    "label": "Sudden severe headache",
+    "tier": "urgent",
+    "patterns": [
+      "\\b(worst headache|sudden severe headache|thunderclap headache)\\b"
+    ]
+  },
+  {
+    "id": "cauda_equina_warning",
+    "label": "Possible cauda equina syndrome",
+    "tier": "urgent",
+    "patterns": [
+      "\\b(back pain.*(can'?t urinate|urinary retention))\\b",
+      "\\b(saddle numbness|numb around groin|new bowel incontinence)\\b"
+    ]
+  },
+  {
+    "id": "pregnancy_heavy_bleeding",
+    "label": "Heavy bleeding during pregnancy",
+    "tier": "urgent",
+    "patterns": [
+      "\\b(pregnan\\w*.*heavy bleeding|bleeding while pregnant)\\b"
+    ]
+  },
+  {
+    "id": "infant_fever_warning",
+    "label": "Fever in very young infant",
+    "tier": "urgent",
+    "patterns": [
+      "\\b((under|below) 3 months.*fever|baby.*under 3 months.*fever)\\b"
+    ]
+  }
+]

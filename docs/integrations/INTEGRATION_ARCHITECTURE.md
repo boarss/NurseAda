@@ -72,7 +72,7 @@ User → Gateway (chat) → Orchestrator
 
 If input or output verification fails, the user sees a **safe fallback message** instead of unverified content. Agents are only “called on” after input verification passes; their reply is only shown after output verification (and optional disclaimer append).
 
-**Code check before triage/medication:** A code-check step runs before the triage or medication agent is invoked (gateway calls CDSS `POST /code-check`). If the input cannot be resolved to symptom or medication terms, the agent is not called. CDSS triage returns severity, suggestions, inferred_codes, confidence, and reasoning; drug-interactions returns codes_checked—so recommendations and diagnoses are code-aware and transparent.
+**Code check before triage/medication:** A code-check step runs before the triage or medication agent is invoked (gateway calls CDSS `POST /code-check`). If the input cannot be resolved to symptom or medication terms, the agent is not called. CDSS triage returns severity, suggestions, inferred_codes, confidence, reasoning, optional `severity_probabilities`, `red_flags`, and optional `shap` (SHAP-style contributions for the internal multinomial logistic triage head, for analytics/metadata—not a substitute for clinical reasoning); drug-interactions returns codes_checked—so recommendations and diagnoses are code-aware and transparent.
 
 ---
 
@@ -116,7 +116,7 @@ If input or output verification fails, the user sees a **safe fallback message**
 - **Service**: `services/xai` (FastAPI).
 - **Endpoints**:
   - **Model transparency**: `GET /model/decision-tree/structure`, `GET /model/logistic-regression/coefficients`, `POST /predict/transparent` (symptom features → severity + explanation).
-  - **Post-hoc**: `POST /explain/shap`, `POST /explain/lime` (feature contribution and local explanation).
+  - **Post-hoc**: `POST /explain/shap` (body includes `model_type`: `tree` default, or `logistic` for SHAP on the scaled logistic regression), `POST /explain/lime` (feature contribution and local explanation; `model_type` as for LIME).
   - **Visualisation**: `POST /visualize/symptom-heatmap` (JSON or PNG base64), `POST /visualize/saliency` (tabular saliency or radiology placeholder).
 - **Agent**: Messages containing "why", "explain", "how did you decide", "show reasoning" are routed to the **explain** agent, which calls the XAI service and returns transparent model output, SHAP values, and LIME local importance.
 

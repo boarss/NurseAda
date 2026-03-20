@@ -46,6 +46,7 @@ services:
     ports:
       - "8002:8002"
 
+  # Optional: pass SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, KNOWLEDGE_CLINICAL_SOURCE / KNOWLEDGE_HERBAL_SOURCE via env_file or environment for DB-backed KB.
   knowledge:
     build:
       context: ./services/knowledge
@@ -138,6 +139,7 @@ services:
     build:
       context: ./services/knowledge
       dockerfile: Dockerfile
+    env_file: .env
     restart: always
     deploy:
       resources:

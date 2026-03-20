@@ -27,7 +27,7 @@ alwaysApply: false
 
 ## Rule-Based Safety
 
-- Maintain emergency patterns in one place (see `EMERGENCY_PATTERNS` in `orchestrator.py` and DKA rules in CDSS/triage).
+- Maintain red-flag rules in one place via `services/gateway/app/data/red_flags.json` and `services/cdss/app/data/red_flags.json` (keep parity with `scripts/verify_red_flags_parity.py`).
 - Use CDSS `triage_logic.py` and `fallback_triage.py` as the first layer for symptom assessment; never bypass triage for symptom-like queries.
 - For high-risk patterns (DKA, chest pain, stroke, severe bleed, overdose, suicide):
   - Route to the emergency agent.

@@ -21,12 +21,9 @@ from app.services.verification import (
 from app.services.discourse import COULD_NOT_PROCESS, COULD_NOT_MATCH, SOMETHING_WENT_WRONG, t as discourse_t
 from app.services.code_checker import check_codes_before_agent
 from app.services.rlhf import rlhf_store
+from app.clinical.red_flags import should_route_emergency
 
 # Keyword patterns for intent (run in order; first match wins for primary agent)
-EMERGENCY_PATTERNS = re.compile(
-    r"\b(dka|diabetic ketoacidosis|ketoacidosis|fruity breath|kussmaul|high ketones?|large ketones?|chest pain|can't breathe|unconscious|stroke|severe bleed|overdose|suicide|emergency|urgent|911|112)\b",
-    re.I,
-)
 MEDICATION_PATTERNS = re.compile(
     r"\b(medication|medicine|drug|pill|dosage|interaction|pharmacy|prescription)\b",
     re.I,
@@ -36,7 +33,7 @@ LAB_PATTERNS = re.compile(
     re.I,
 )
 TRIAGE_PATTERNS = re.compile(
-    r"\b(symptom|pain|fever|cough|headache|feel sick|diagnosis|what's wrong|triage|unwell|don't feel well|feel bad|help me|nausea|vomit|dizzy|tired|rash|swell|stomach|throat|ache|hurt|bleed|breath|ketone|ketones|dka|diabetes|blood sugar)\b",
+    r"\b(symptom|pain|fever|cough|headache|feel sick|diagnosis|what's wrong|triage|unwell|don't feel well|feel bad|help me|nausea|vomit|dizzy|tired|rash|swell|stomach|throat|ache|hurt|bleed|breath|ketone|ketones|dka|diabetes|blood sugar|paralysis|droop|slurred speech|hives|wheez(e|ing)|numb(ness)?|urinary retention|can'?t urinate)\b",
     re.I,
 )
 EXPLAIN_PATTERNS = re.compile(
@@ -84,7 +81,7 @@ def _detect_intent(user_message: str, context: dict | None = None) -> str:
     """Determine which agent should handle this message. Returns agent_id."""
     text = (user_message or "").strip().lower()
     has_image = bool((context or {}).get("image_base64"))
-    if EMERGENCY_PATTERNS.search(text):
+    if should_route_emergency(text):
         return "emergency"
     if EXPLAIN_PATTERNS.search(text):
         return "explain"
@@ -117,33 +114,47 @@ class AgentOrchestrator:
         user_message: str,
         context: dict | None = None,
     ) -> str:
+        response = await self.run_with_metadata(user_message, context=context)
+        return str(response.get("reply", ""))[:8000]
+
+    async def run_with_metadata(
+        self,
+        user_message: str,
+        context: dict | None = None,
+    ) -> dict:
         """
         Route to the appropriate agent, verify input, execute, verify output, then return reply.
         """
         context = context or {}
         locale = context.get("locale", "en")
+        # Independence policy: do not forward external patient identifiers downstream.
+        # Recommendations/diagnoses must come from NurseAda knowledge and user message alone.
+        patient_id_present = bool(context.get("patient_id"))
+        sanitized_context = {**context}
+        sanitized_context.pop("patient_id", None)
 
         # 1) Input verification (must pass before any agent is called)
         intent = _detect_intent(user_message, context)
         agent = self.agents.get(intent) or self.agents["general"]
         input_verification = verify_agent_input(user_message, agent.agent_id)
         if not input_verification.ok:
-            return discourse_t("could_not_process", locale) + get_standard_disclaimer()
+            return {"reply": discourse_t("could_not_process", locale) + get_standard_disclaimer(), "clinical": None}
 
         # 2) Code check: for triage and medication, verify codes before calling the agent
-        code_check = await check_codes_before_agent(agent.agent_id, user_message, context)
+        code_check = await check_codes_before_agent(agent.agent_id, user_message, sanitized_context)
         if not code_check.ok:
-            return (
-                code_check.reason.strip() or discourse_t("could_not_match", locale)
-            ) + get_standard_disclaimer()
+            return {
+                "reply": (code_check.reason.strip() or discourse_t("could_not_match", locale)) + get_standard_disclaimer(),
+                "clinical": None,
+            }
         if code_check.resolved_codes:
-            context = {**context, "resolved_codes": code_check.resolved_codes}
+            sanitized_context = {**sanitized_context, "resolved_codes": code_check.resolved_codes}
 
         # 3) Execute agent
         try:
-            result = await agent.execute(user_message, context=context)
+            result = await agent.execute(user_message, context=sanitized_context)
         except Exception:
-            return discourse_t("something_went_wrong", locale) + get_standard_disclaimer()
+            return {"reply": discourse_t("something_went_wrong", locale) + get_standard_disclaimer(), "clinical": None}
 
         # 4) Output verification (must pass before showing to user)
         content = (result.content or "").strip()
@@ -153,11 +164,14 @@ class AgentOrchestrator:
             require_clinical_disclaimer=True,
         )
         if not output_verification.ok:
-            return (
-                "I wasn't able to provide a verified response for that. "
-                "Please consult a healthcare provider or try rephrasing your question."
-                + get_standard_disclaimer()
-            )
+            return {
+                "reply": (
+                    "I wasn't able to provide a verified response for that. "
+                    "Please consult a healthcare provider or try rephrasing your question."
+                    + get_standard_disclaimer()
+                ),
+                "clinical": None,
+            }
 
         # 5) Ensure disclaimer for clinical agents
         if agent.agent_id in ("triage", "medication", "lab", "emergency", "explain", "imaging", "herbal", "appointment"):
@@ -175,7 +189,7 @@ class AgentOrchestrator:
                 severity=None,
                 metadata={
                     "intent": intent,
-                    "has_patient_id": bool(context.get("patient_id")),
+                    "has_patient_id": patient_id_present,
                     "has_image": bool(context.get("image_base64")),
                     "has_user": bool(context.get("user_id")),
                 },
@@ -183,4 +197,7 @@ class AgentOrchestrator:
         except Exception:
             pass
 
-        return content[:8000]  # Hard cap for display
+        return {
+            "reply": content[:8000],  # Hard cap for display
+            "clinical": (result.metadata or {}).get("clinical_trace"),
+        }

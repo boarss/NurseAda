@@ -1,9 +1,24 @@
 /**
  * Client-side API helpers for NurseAda gateway.
- * Set NEXT_PUBLIC_GATEWAY_URL in .env (e.g. http://localhost:8000).
+ *
+ * Local: NEXT_PUBLIC_GATEWAY_URL=http://localhost:8080 (direct to gateway).
+ * Vercel: NEXT_PUBLIC_GATEWAY_URL=/api/gateway and set server-side GATEWAY_URL to the real gateway origin.
  */
+import type { ClinicalDiagnosis } from "@/lib/clinical/diagnosisEngine";
+import type { ExtractedSymptom } from "@/lib/clinical/extractSymptoms";
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:8000";
+function gatewayBase(): string {
+  const raw = (process.env.NEXT_PUBLIC_GATEWAY_URL ?? "http://localhost:8080").trim();
+  if (raw.endsWith("/") && raw.length > 1) return raw.slice(0, -1);
+  return raw;
+}
+
+/** Full URL to a gateway path (supports absolute base or same-origin prefix e.g. /api/gateway). */
+function gatewayUrl(path: string): string {
+  const base = gatewayBase();
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
+}
 
 function authHeaders(token?: string | null): Record<string, string> {
   const h: Record<string, string> = { "Content-Type": "application/json" };
@@ -11,12 +26,12 @@ function authHeaders(token?: string | null): Record<string, string> {
   return h;
 }
 
-/** Generic authenticated fetch to gateway; path is relative to GATEWAY_URL (e.g. "/admin/clinics"). */
+/** Generic authenticated fetch to gateway; path is relative (e.g. "/admin/clinics"). */
 export async function apiFetch<T = unknown>(
   path: string,
   options?: { token?: string | null; method?: string; body?: unknown }
 ): Promise<T> {
-  const res = await fetch(`${GATEWAY_URL}${path}`, {
+  const res = await fetch(gatewayUrl(path), {
     method: options?.method ?? "GET",
     headers: authHeaders(options?.token),
     ...(options?.body !== undefined && { body: JSON.stringify(options.body) }),
@@ -38,7 +53,7 @@ export async function apiFetch<T = unknown>(
 }
 
 export async function healthCheck(): Promise<{ status: "healthy" | "unhealthy" }> {
-  const res = await fetch(`${GATEWAY_URL}/health`, { cache: "no-store" });
+  const res = await fetch(gatewayUrl("/health"), { cache: "no-store" });
   if (!res.ok) throw new Error("Health check failed");
   return res.json();
 }
@@ -53,11 +68,16 @@ export type ChatOptions = {
 };
 
 export type ChatResponse = string; // backend reply text
+export type ClinicalTrace = {
+  extracted_symptoms: ExtractedSymptom[];
+  diagnosis: ClinicalDiagnosis;
+  recommendations: string[];
+};
 
 export async function sendChatMessage(
   messages: ChatMessage[],
   options?: ChatOptions
-): Promise<{ reply: ChatResponse }> {
+): Promise<{ reply: ChatResponse; clinical?: ClinicalTrace | null }> {
   type BodyType = {
     messages: ChatMessage[];
     patient_id?: string | null;
@@ -73,7 +93,7 @@ export async function sendChatMessage(
   if (options?.imageBase64) body.image_base64 = options.imageBase64;
   if (options?.locale) body.locale = options.locale;
 
-  const res = await fetch(`${GATEWAY_URL}/chat`, {
+  const res = await fetch(gatewayUrl("/chat"), {
     method: "POST",
     headers: authHeaders(options?.token),
     body: JSON.stringify(body),
@@ -102,7 +122,7 @@ export async function sendChatMessage(
     throw new Error(msg);
   }
 
-  return text ? JSON.parse(text) : { reply: "" };
+  return text ? JSON.parse(text) : { reply: "", clinical: null };
 }
 
 // ── Herbal catalog ──────────────────────────────────────────────────
@@ -126,7 +146,7 @@ export async function getHerbalCatalog(
   condition?: string
 ): Promise<HerbalCatalogResponse> {
   const params = condition ? `?condition=${encodeURIComponent(condition)}` : "";
-  const res = await fetch(`${GATEWAY_URL}/herbal/catalog${params}`);
+  const res = await fetch(`${gatewayUrl("/herbal/catalog")}${params}`);
   if (!res.ok) {
     if (res.status === 503) throw new Error("Herbal catalog is not configured");
     throw new Error("Failed to fetch herbal catalog");
@@ -164,7 +184,7 @@ export type ReminderCreatePayload = {
 export async function getReminders(
   token?: string | null
 ): Promise<{ reminders: MedicationReminder[] }> {
-  const res = await fetch(`${GATEWAY_URL}/medications/reminders`, {
+  const res = await fetch(gatewayUrl("/medications/reminders"), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -179,7 +199,7 @@ export async function createReminder(
   data: ReminderCreatePayload,
   token?: string | null
 ): Promise<MedicationReminder> {
-  const res = await fetch(`${GATEWAY_URL}/medications/reminders`, {
+  const res = await fetch(gatewayUrl("/medications/reminders"), {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify(data),
@@ -196,7 +216,7 @@ export async function updateReminder(
   fields: Partial<MedicationReminder>,
   token?: string | null
 ): Promise<MedicationReminder> {
-  const res = await fetch(`${GATEWAY_URL}/medications/reminders/${id}`, {
+  const res = await fetch(gatewayUrl(`/medications/reminders/${id}`), {
     method: "PUT",
     headers: authHeaders(token),
     body: JSON.stringify(fields),
@@ -212,7 +232,7 @@ export async function deleteReminder(
   id: string,
   token?: string | null
 ): Promise<void> {
-  const res = await fetch(`${GATEWAY_URL}/medications/reminders/${id}`, {
+  const res = await fetch(gatewayUrl(`/medications/reminders/${id}`), {
     method: "DELETE",
     headers: authHeaders(token),
   });
@@ -241,7 +261,7 @@ export type InteractionCheckResponse = {
 export async function checkInteractions(
   drugs: string[]
 ): Promise<InteractionCheckResponse> {
-  const res = await fetch(`${GATEWAY_URL}/medications/check-interactions`, {
+  const res = await fetch(gatewayUrl("/medications/check-interactions"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ drugs }),
@@ -303,7 +323,9 @@ export async function getClinics(
   if (filters?.type) params.set("type", filters.type);
   if (filters?.q) params.set("q", filters.q);
   const qs = params.toString();
-  const res = await fetch(`${GATEWAY_URL}/appointments/clinics${qs ? `?${qs}` : ""}`);
+  const res = await fetch(
+    `${gatewayUrl("/appointments/clinics")}${qs ? `?${qs}` : ""}`
+  );
   if (!res.ok) throw new Error("Failed to fetch clinic directory");
   return res.json();
 }
@@ -311,7 +333,7 @@ export async function getClinics(
 export async function getAppointments(
   token?: string | null
 ): Promise<{ appointments: Appointment[] }> {
-  const res = await fetch(`${GATEWAY_URL}/appointments`, {
+  const res = await fetch(gatewayUrl("/appointments"), {
     headers: authHeaders(token),
   });
   if (!res.ok) {
@@ -326,7 +348,7 @@ export async function createAppointment(
   data: AppointmentCreatePayload,
   token?: string | null
 ): Promise<Appointment> {
-  const res = await fetch(`${GATEWAY_URL}/appointments`, {
+  const res = await fetch(gatewayUrl("/appointments"), {
     method: "POST",
     headers: authHeaders(token),
     body: JSON.stringify(data),
@@ -343,7 +365,7 @@ export async function updateAppointment(
   fields: Partial<Appointment>,
   token?: string | null
 ): Promise<Appointment> {
-  const res = await fetch(`${GATEWAY_URL}/appointments/${id}`, {
+  const res = await fetch(gatewayUrl(`/appointments/${id}`), {
     method: "PUT",
     headers: authHeaders(token),
     body: JSON.stringify(fields),
@@ -359,7 +381,7 @@ export async function deleteAppointment(
   id: string,
   token?: string | null
 ): Promise<void> {
-  const res = await fetch(`${GATEWAY_URL}/appointments/${id}`, {
+  const res = await fetch(gatewayUrl(`/appointments/${id}`), {
     method: "DELETE",
     headers: authHeaders(token),
   });
@@ -388,7 +410,7 @@ export async function sendFeedback(payload: FeedbackPayload): Promise<void> {
     rating: payload.rating,
     comment: payload.comment ?? "",
   };
-  await fetch(`${GATEWAY_URL}/feedback`, {
+  await fetch(gatewayUrl("/feedback"), {
     method: "POST",
     headers: authHeaders(payload.token),
     body: JSON.stringify(body),
