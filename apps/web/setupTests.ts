@@ -1,5 +1,7 @@
-import { expect, vi } from "vitest";
+import { beforeEach, expect, vi } from "vitest";
 import * as matchers from "@testing-library/jest-dom/matchers";
+
+import { supabaseMock, resetSupabaseClientMock } from "./test/mocks/supabaseClientMock";
 
 expect.extend(matchers);
 
@@ -17,19 +19,10 @@ if (typeof window !== "undefined" && !window.matchMedia) {
   });
 }
 
-// Mock Supabase client so AuthProvider works in tests without real env vars
-vi.mock("@/lib/supabase", () => {
-  const auth = {
-    getSession: async () => ({ data: { session: null } }),
-    onAuthStateChange: () => ({
-      data: { subscription: { unsubscribe: () => {} } },
-    }),
-    signInWithPassword: async () => ({ error: null }),
-    signUp: async () => ({ error: null }),
-    signOut: async () => ({}),
-  };
-  return {
-    supabase: { auth },
-  };
-});
+vi.mock("@/lib/supabase", () => ({
+  supabase: supabaseMock,
+}));
 
+beforeEach(() => {
+  resetSupabaseClientMock();
+});

@@ -51,6 +51,14 @@
     "copy": "Kọpịa",
     "copied": "E kọpịrịala"
   },
+  "profile": {
+    "title": "Profaịlụ",
+    "guestTitle": "Banye iji hụ profaịlụ gị",
+    "guestBody": "Lelee nọmba onye ọrịa gị, gbanwee asụsụ, ma ọpụpụ mgbe ị mechara.",
+    "memberSince": "Onye otu kemgbe",
+    "languageLabel": "Asụsụ",
+    "displayName": "Aha na-egosi"
+  },
   "chat": {
     "title": "Kwurịta okwu na NurseAda",
     "remedies": "Ọgwụ ọdịnala",

@@ -51,6 +51,14 @@
     "copy": "Kó",
     "copied": "A ti kó"
   },
+  "profile": {
+    "title": "Profáìlì",
+    "guestTitle": "Wọlé láti wo profáìlì rẹ",
+    "guestBody": "Wo nọ́mbà aláìsàn rẹ, yípadà èdè, kí o sì jáde nígbà tí o bá parí.",
+    "memberSince": "Ọmọ ẹgbẹ́ láti",
+    "languageLabel": "Èdè",
+    "displayName": "Orúkọ tí ń hàn"
+  },
   "chat": {
     "title": "Bá NurseAda sọ̀rọ̀",
     "remedies": "Àwọn àgbo",

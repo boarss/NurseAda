@@ -11,6 +11,9 @@ import {
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 
+/** Seconds before access token expiry to proactively refresh (Supabase JWT TTL is typically 1h). */
+const ACCESS_TOKEN_REFRESH_SLACK_SEC = 120;
+
 type AuthState = {
   session: Session | null;
   user: User | null;
@@ -19,6 +22,8 @@ type AuthState = {
   signUp: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   accessToken: string | null;
+  /** Use before gateway calls so long-lived tabs don’t send an expired JWT. */
+  getValidAccessToken: () => Promise<string | null>;
   patientCode: string | null;
 };
 
@@ -30,6 +35,7 @@ const AuthContext = createContext<AuthState>({
   signUp: async () => null,
   signOut: async () => {},
   accessToken: null,
+  getValidAccessToken: async () => null,
   patientCode: null,
 });
 
@@ -125,6 +131,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, []);
 
+  const getValidAccessToken = useCallback(async (): Promise<string | null> => {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session?.access_token) return null;
+
+    const session = data.session;
+    const exp = session.expires_at;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const needsRefresh =
+      exp != null && exp - ACCESS_TOKEN_REFRESH_SLACK_SEC <= nowSec;
+
+    if (!needsRefresh) return session.access_token;
+
+    const { data: refreshed, error: refErr } =
+      await supabase.auth.refreshSession();
+    if (refErr || !refreshed.session?.access_token) {
+      return session.access_token;
+    }
+    return refreshed.session.access_token;
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -135,6 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signOut,
         accessToken: session?.access_token ?? null,
+        getValidAccessToken,
         patientCode,
       }}
     >

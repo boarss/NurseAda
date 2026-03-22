@@ -21,6 +21,8 @@ vi.mock("@/lib/AuthContext", async () => {
       signUp: vi.fn(),
       signOut: vi.fn(),
       accessToken: null,
+      getValidAccessToken: async () => null,
+      patientCode: null,
     }),
     AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };

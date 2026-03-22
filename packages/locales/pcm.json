@@ -51,6 +51,14 @@
     "copy": "Copy",
     "copied": "Copied"
   },
+  "profile": {
+    "title": "Profile",
+    "guestTitle": "Sign in make you see your profile",
+    "guestBody": "See your Patient ID, change language, sign out when you don.",
+    "memberSince": "Member since",
+    "languageLabel": "Language",
+    "displayName": "Name wey dey show"
+  },
   "chat": {
     "title": "Yarn with NurseAda",
     "remedies": "Local Remedies",

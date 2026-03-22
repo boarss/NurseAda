@@ -54,14 +54,29 @@ async def insert(table: str, row: dict) -> dict:
         return data[0] if isinstance(data, list) else data
 
 
-async def update(table: str, row_id: str, fields: dict) -> dict:
+async def update(
+    table: str,
+    row_id: str,
+    fields: dict,
+    *,
+    filters: dict[str, str] | None = None,
+) -> dict:
+    """
+    PATCH rows matching id and optional extra PostgREST filters (AND).
+
+    With the service role, RLS is bypassed — always pass tenant scoping
+    (e.g. user_id) for user-owned tables alongside id.
+    """
+    params: dict[str, str] = {"id": f"eq.{row_id}"}
+    for col, val in (filters or {}).items():
+        params[col] = val
     h = _headers()
     h["Prefer"] = "return=representation"
     async with httpx.AsyncClient() as client:
         r = await client.patch(
             _rest_url(table),
             headers=h,
-            params={"id": f"eq.{row_id}"},
+            params=params,
             json=fields,
             timeout=_TIMEOUT,
         )

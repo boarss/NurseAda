@@ -115,7 +115,12 @@ async def update_appointment(
     if not existing:
         raise HTTPException(status_code=404, detail="Appointment not found.")
 
-    updated = await supa.update(TABLE, appointment_id, fields)
+    updated = await supa.update(
+        TABLE,
+        appointment_id,
+        fields,
+        filters={"user_id": f"eq.{current_user.user_id}"},
+    )
     return updated
 
 

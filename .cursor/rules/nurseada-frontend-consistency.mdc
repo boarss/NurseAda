@@ -19,7 +19,7 @@ alwaysApply: false
 
 ## Pages
 
-- Web: `/`, `/chat`, `/remedies`, `/medications`, `/appointments`, `/patient/[id]`, `/auth/sign-in`, `/auth/sign-up`
+- Web: `/`, `/chat`, `/remedies`, `/medications`, `/appointments`, `/profile`, `/patient/[id]`, `/auth/sign-in`, `/auth/sign-up` (`/account` redirects to `/profile`)
 - Mobile: `index`, `chat`, `remedies`, `medications`, `appointments`, `patient`, `sign-in`, `sign-up`
 - `/remedies` — searchable herbal catalog with condition filters, evidence badges, contraindication warnings, and disclaimer.
 - `/medications` — two-tab layout: My Reminders (auth required, CRUD reminders with toggle) and Interaction Checker (no auth, multi-drug input with severity results). Disclaimer at bottom.

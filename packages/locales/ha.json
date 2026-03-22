@@ -51,6 +51,14 @@
     "copy": "Kwafa",
     "copied": "An kwafa"
   },
+  "profile": {
+    "title": "Bayanin kai",
+    "guestTitle": "Shiga don ganin bayanin ka",
+    "guestBody": "Duba lambar majinyaci, canza harshe, kuma fita lokacin da ka gama.",
+    "memberSince": "Memba tun",
+    "languageLabel": "Harshe",
+    "displayName": "Sunan da ke bayyana"
+  },
   "chat": {
     "title": "Yi hira da NurseAda",
     "remedies": "Magunguna na gargajiya",

@@ -82,7 +82,7 @@ type ChatMsg = {
 
 export default function ChatPage() {
   const t = useTranslations();
-  const { user, signOut, accessToken, patientCode } = useAuth();
+  const { user, signOut, getValidAccessToken, patientCode } = useAuth();
   const { locale } = useLocale();
   const [message, setMessage] = useState("");
   const [dismissedAuthNudge, setDismissedAuthNudge] = useState(false);
@@ -132,9 +132,10 @@ export default function ChatPage() {
         ...history,
         { role: "user" as const, content: userText },
       ];
+      const token = await getValidAccessToken();
       const { reply } = await sendChatMessage(nextMessages, {
         imageBase64: imageToSend || undefined,
-        token: accessToken,
+        token: token ?? undefined,
         locale,
       });
       setMessages((prev) => {
@@ -216,14 +217,17 @@ export default function ChatPage() {
           {user ? (
             <>
               <Link
-                href="/account"
+                href="/profile"
                 className="hidden sm:inline rounded-card border border-border bg-surface px-2 py-1.5 text-xs text-muted hover:text-fg hover:bg-surface/80 font-body transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-                title={t("chat.yourPatientId")}
+                title={`${t("chat.yourPatientId")}: ${patientCode ?? "—"}`}
               >
-                {t("chat.yourPatientId")}:{" "}
-                <span className="text-fg font-semibold">
-                  {patientCode ?? "—"}
-                </span>
+                {t("common.profile")}
+                {patientCode ? (
+                  <>
+                    {": "}
+                    <span className="text-fg font-semibold">{patientCode}</span>
+                  </>
+                ) : null}
               </Link>
               <span className="hidden sm:inline text-xs text-muted font-body truncate max-w-[120px]">
                 {user.email}
@@ -349,8 +353,11 @@ export default function ChatPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          void sendFeedback({ rating: 1, token: accessToken });
-                          setLastReplyIndex(null);
+                          void (async () => {
+                            const tok = await getValidAccessToken();
+                            await sendFeedback({ rating: 1, token: tok ?? undefined });
+                            setLastReplyIndex(null);
+                          })();
                         }}
                         className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
                         aria-label="Thumbs up"
@@ -360,8 +367,11 @@ export default function ChatPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          void sendFeedback({ rating: -1, token: accessToken });
-                          setLastReplyIndex(null);
+                          void (async () => {
+                            const tok = await getValidAccessToken();
+                            await sendFeedback({ rating: -1, token: tok ?? undefined });
+                            setLastReplyIndex(null);
+                          })();
                         }}
                         className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
                         aria-label="Thumbs down"

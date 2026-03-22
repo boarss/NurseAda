@@ -51,6 +51,14 @@
     "copy": "Copy",
     "copied": "Copied"
   },
+  "profile": {
+    "title": "Profile",
+    "guestTitle": "Sign in to your profile",
+    "guestBody": "View your Patient ID, change language, and sign out when you are done.",
+    "memberSince": "Member since",
+    "languageLabel": "Language",
+    "displayName": "Display name"
+  },
   "chat": {
     "title": "Chat with NurseAda",
     "remedies": "Remedies",

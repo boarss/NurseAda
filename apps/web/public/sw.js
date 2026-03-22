@@ -23,7 +23,12 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
 
   // Always fetch fresh for key interactive pages to avoid stale UI.
-  if (url.origin === self.location.origin && (url.pathname.startsWith("/chat") || url.pathname.startsWith("/account"))) {
+  if (
+    url.origin === self.location.origin &&
+    (url.pathname.startsWith("/chat") ||
+      url.pathname.startsWith("/account") ||
+      url.pathname.startsWith("/profile"))
+  ) {
     e.respondWith(fetch(e.request));
     return;
   }

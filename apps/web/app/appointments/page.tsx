@@ -150,11 +150,11 @@ function ClinicCard({
 
 function BookingForm({
   prefilledClinic,
-  token,
+  getAccessToken,
   onBooked,
 }: {
   prefilledClinic?: Clinic | null;
-  token?: string | null;
+  getAccessToken: () => Promise<string | null>;
   onBooked: (a: Appointment) => void;
 }) {
   const t = useTranslations();
@@ -185,6 +185,11 @@ function BookingForm({
     setSaving(true);
     setError(null);
     try {
+      const token = await getAccessToken();
+      if (!token) {
+        setError("Please sign in to continue.");
+        return;
+      }
       const created = await createAppointment(
         {
           clinic_name: clinicName.trim(),
@@ -362,7 +367,7 @@ function BookingForm({
 
 export default function AppointmentsPage() {
   const t = useTranslations();
-  const { user, accessToken, loading: authLoading } = useAuth();
+  const { user, getValidAccessToken, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<Tab>("appointments");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [clinics, setClinics] = useState<Clinic[]>([]);
@@ -376,18 +381,19 @@ export default function AppointmentsPage() {
   const [typeFilter, setTypeFilter] = useState("");
 
   const loadAppointments = useCallback(async () => {
-    if (!accessToken) return;
+    const token = await getValidAccessToken();
+    if (!token) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getAppointments(accessToken);
+      const data = await getAppointments(token);
       setAppointments(data.appointments);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load appointments");
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [getValidAccessToken]);
 
   const loadClinics = useCallback(async () => {
     setLoading(true);
@@ -407,13 +413,18 @@ export default function AppointmentsPage() {
   }, [stateFilter, specialtyFilter, typeFilter]);
 
   useEffect(() => {
-    if (tab === "appointments" && accessToken) loadAppointments();
+    if (tab === "appointments" && user && !authLoading) loadAppointments();
     if (tab === "clinics") loadClinics();
-  }, [tab, accessToken, loadAppointments, loadClinics]);
+  }, [tab, user, authLoading, loadAppointments, loadClinics]);
 
   const handleCancel = async (a: Appointment) => {
     try {
-      await deleteAppointment(a.id, accessToken);
+      const token = await getValidAccessToken();
+      if (!token) {
+        toast.error(t("common.error"));
+        return;
+      }
+      await deleteAppointment(a.id, token);
       setAppointments((prev) => prev.filter((x) => x.id !== a.id));
       toast.success(t("common.toastAppointmentCancelled"));
     } catch {
@@ -669,7 +680,7 @@ export default function AppointmentsPage() {
           ) : (
             <BookingForm
               prefilledClinic={prefilledClinic}
-              token={accessToken}
+              getAccessToken={getValidAccessToken}
               onBooked={handleBooked}
             />
           )}

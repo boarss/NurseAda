@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
-    "test": "vitest"
+    "test": "vitest",
+    "test:integration": "vitest run test/integration"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",

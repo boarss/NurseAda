@@ -106,10 +106,10 @@ function ReminderCard({
 
 function AddReminderForm({
   onCreated,
-  token,
+  getAccessToken,
 }: {
   onCreated: (r: MedicationReminder) => void;
-  token?: string | null;
+  getAccessToken: () => Promise<string | null>;
 }) {
   const t = useTranslations();
   const frequencyOptions = [
@@ -143,6 +143,11 @@ function AddReminderForm({
     setSaving(true);
     setError(null);
     try {
+      const token = await getAccessToken();
+      if (!token) {
+        setError("Please sign in to continue.");
+        return;
+      }
       const created = await createReminder(
         {
           medication_name: name.trim(),
@@ -447,35 +452,41 @@ function InteractionChecker() {
 
 export default function MedicationsPage() {
   const t = useTranslations();
-  const { user, accessToken, loading: authLoading } = useAuth();
+  const { user, getValidAccessToken, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<"reminders" | "interactions">("reminders");
   const [reminders, setReminders] = useState<MedicationReminder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadReminders = useCallback(async () => {
-    if (!accessToken) return;
+    const token = await getValidAccessToken();
+    if (!token) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getReminders(accessToken);
+      const data = await getReminders(token);
       setReminders(data.reminders);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load reminders");
     } finally {
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [getValidAccessToken]);
 
   useEffect(() => {
-    if (tab === "reminders" && accessToken) {
+    if (tab === "reminders" && user && !authLoading) {
       loadReminders();
     }
-  }, [tab, accessToken, loadReminders]);
+  }, [tab, user, authLoading, loadReminders]);
 
   const handleToggle = async (r: MedicationReminder) => {
     try {
-      await updateReminder(r.id, { is_active: !r.is_active }, accessToken);
+      const token = await getValidAccessToken();
+      if (!token) {
+        toast.error(t("common.error"));
+        return;
+      }
+      await updateReminder(r.id, { is_active: !r.is_active }, token);
       setReminders((prev) =>
         prev.map((x) => (x.id === r.id ? { ...x, is_active: !x.is_active } : x))
       );
@@ -487,7 +498,12 @@ export default function MedicationsPage() {
 
   const handleDelete = async (r: MedicationReminder) => {
     try {
-      await deleteReminder(r.id, accessToken);
+      const token = await getValidAccessToken();
+      if (!token) {
+        toast.error(t("common.error"));
+        return;
+      }
+      await deleteReminder(r.id, token);
       setReminders((prev) => prev.filter((x) => x.id !== r.id));
       toast.success(t("common.toastReminderDeleted"));
     } catch {
@@ -613,7 +629,7 @@ export default function MedicationsPage() {
 
               <AddReminderForm
                 onCreated={(r) => setReminders((prev) => [r, ...prev])}
-                token={accessToken}
+                getAccessToken={getValidAccessToken}
               />
             </>
           )}

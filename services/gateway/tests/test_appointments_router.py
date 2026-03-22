@@ -23,11 +23,23 @@ class DummySupabase:
         self.rows.append(row)
         return row
 
-    async def update(self, table: str, row_id: str, fields: dict):
+    async def update(
+        self,
+        table: str,
+        row_id: str,
+        fields: dict,
+        *,
+        filters: dict[str, str] | None = None,
+    ):
         for r in self.rows:
-            if str(r.get("id")) == row_id:
-                r.update(fields)
-                return r
+            if str(r.get("id")) != row_id:
+                continue
+            if filters and not all(
+                str(r.get(k.split(".")[0])) in v for k, v in filters.items()
+            ):
+                continue
+            r.update(fields)
+            return r
         return {}
 
     async def delete(self, table: str, row_id: str, *, user_id: str):

@@ -18,6 +18,12 @@ export default function HomePage() {
           <>
             {user ? (
               <>
+                <Link
+                  href="/profile"
+                  className="rounded-card border border-border bg-surface px-3 py-1.5 text-sm font-body text-fg hover:bg-bubble-assistant/50 transition-transform duration-fast ease-out-expo focus:outline-none focus:ring-2 focus:ring-primary active:scale-[0.98]"
+                >
+                  {t("common.profile")}
+                </Link>
                 <span className="text-sm text-muted font-body truncate max-w-[180px]">
                   {user.email}
                 </span>
