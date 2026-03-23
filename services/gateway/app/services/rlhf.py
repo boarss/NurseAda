@@ -20,6 +20,7 @@ class FeedbackRecord:
   rating: int
   comment: str
   created_at: float
+  metadata: dict[str, Any]
 
 
 class RLHFStore:
@@ -50,6 +51,7 @@ class RLHFStore:
     agent_id: Optional[str],
     rating: int,
     comment: str,
+    metadata: Optional[dict[str, Any]] = None,
   ) -> None:
     fb = FeedbackRecord(
       conversation_id=conversation_id,
@@ -58,6 +60,7 @@ class RLHFStore:
       rating=rating,
       comment=comment,
       created_at=time.time(),
+      metadata=metadata or {},
     )
     self.feedback.append(fb)
 

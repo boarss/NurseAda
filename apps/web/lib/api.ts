@@ -416,3 +416,40 @@ export async function sendFeedback(payload: FeedbackPayload): Promise<void> {
     body: JSON.stringify(body),
   });
 }
+
+export type MedicalFeedbackPayload = {
+  sourceUrl: string;
+  conversationId?: string | null;
+  messageId?: string | null;
+  agentId?: string | null;
+  rating: number;
+  comment?: string | null;
+  maxPages?: number;
+  token?: string | null;
+};
+
+export type MedicalFeedbackResponse = {
+  status: string;
+  crawl_status?: string;
+  pages_captured?: number;
+  disclaimer?: string;
+};
+
+/** Signed-in only: records RLHF feedback plus Cloudflare crawl excerpts from allowlisted URLs. */
+export async function sendMedicalFeedbackWithSource(
+  payload: MedicalFeedbackPayload
+): Promise<MedicalFeedbackResponse> {
+  return apiFetch<MedicalFeedbackResponse>("/feedback/medical-source", {
+    method: "POST",
+    token: payload.token,
+    body: {
+      source_url: payload.sourceUrl,
+      conversation_id: payload.conversationId ?? null,
+      message_id: payload.messageId ?? null,
+      agent_id: payload.agentId ?? null,
+      rating: payload.rating,
+      comment: payload.comment ?? "",
+      max_pages: payload.maxPages ?? 3,
+    },
+  });
+}

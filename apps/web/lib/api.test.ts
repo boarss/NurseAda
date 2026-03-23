@@ -14,6 +14,7 @@ import {
   healthCheck,
   sendChatMessage,
   sendFeedback,
+  sendMedicalFeedbackWithSource,
   updateAppointment,
   updateReminder,
 } from "./api";
@@ -230,6 +231,32 @@ describe("api", () => {
         agent_id: "a",
         rating: 5,
         comment: "ok",
+      });
+    });
+  });
+
+  describe("sendMedicalFeedbackWithSource", () => {
+    it("POSTs medical-source body", async () => {
+      fetchMock.mockResolvedValueOnce(
+        mockResponse(JSON.stringify({ status: "ok", crawl_status: "completed", pages_captured: 1 }))
+      );
+      const res = await sendMedicalFeedbackWithSource({
+        sourceUrl: "https://www.who.int/x",
+        rating: 1,
+        token: "t",
+        maxPages: 5,
+      });
+      expect(res.status).toBe("ok");
+      expect(res.pages_captured).toBe(1);
+      const [, init] = fetchMock.mock.calls[0];
+      expect(JSON.parse((init as RequestInit).body as string)).toEqual({
+        source_url: "https://www.who.int/x",
+        conversation_id: null,
+        message_id: null,
+        agent_id: null,
+        rating: 1,
+        comment: "",
+        max_pages: 5,
       });
     });
   });

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { sendChatMessage, sendFeedback } from "@/lib/api";
+import { sendChatMessage, sendFeedback, sendMedicalFeedbackWithSource } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { useLocale } from "@/lib/IntlProvider";
 import { LanguagePicker } from "@/components/LanguagePicker";
@@ -102,6 +102,7 @@ export default function ChatPage() {
   ];
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [lastReplyIndex, setLastReplyIndex] = useState<number | null>(null);
+  const [feedbackSourceUrl, setFeedbackSourceUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -141,6 +142,7 @@ export default function ChatPage() {
       setMessages((prev) => {
         const next = [...prev, { role: "assistant", text: reply } as ChatMsg];
         setLastReplyIndex(next.length - 1);
+        setFeedbackSourceUrl("");
         return next;
       });
     } catch (err) {
@@ -160,6 +162,34 @@ export default function ChatPage() {
   const handleSuggestedPrompt = (prompt: string) => {
     setMessage(prompt);
   };
+
+  const submitReplyFeedback = useCallback(
+    async (rating: number) => {
+      const tok = await getValidAccessToken();
+      const ref = feedbackSourceUrl.trim();
+      try {
+        if (user && ref) {
+          if (!tok) {
+            toast.error(t("chat.medicalSourceHint"));
+            return;
+          }
+          await sendMedicalFeedbackWithSource({
+            sourceUrl: ref,
+            rating,
+            token: tok,
+          });
+          toast.success(t("chat.feedbackWithSourceThanks"));
+        } else {
+          await sendFeedback({ rating, token: tok ?? undefined });
+        }
+        setFeedbackSourceUrl("");
+        setLastReplyIndex(null);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t("common.error"));
+      }
+    },
+    [user, feedbackSourceUrl, getValidAccessToken, t]
+  );
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -348,36 +378,49 @@ export default function ChatPage() {
                 <>
                   <MessageContent text={m.text} />
                   {lastReplyIndex === i && (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                      <span>{t("chat.wasHelpful")}</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void (async () => {
-                            const tok = await getValidAccessToken();
-                            await sendFeedback({ rating: 1, token: tok ?? undefined });
-                            setLastReplyIndex(null);
-                          })();
-                        }}
-                        className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
-                        aria-label="Thumbs up"
-                      >
-                        👍
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void (async () => {
-                            const tok = await getValidAccessToken();
-                            await sendFeedback({ rating: -1, token: tok ?? undefined });
-                            setLastReplyIndex(null);
-                          })();
-                        }}
-                        className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
-                        aria-label="Thumbs down"
-                      >
-                        👎
-                      </button>
+                    <div className="mt-2 space-y-2 text-xs text-muted">
+                      {user ? (
+                        <div className="space-y-1">
+                          <label
+                            htmlFor={`medical-feedback-source-${i}`}
+                            className="block font-medium text-fg/80"
+                          >
+                            {t("chat.medicalSourceLabel")}
+                          </label>
+                          <input
+                            id={`medical-feedback-source-${i}`}
+                            type="url"
+                            inputMode="url"
+                            autoComplete="url"
+                            placeholder={t("chat.medicalSourcePlaceholder")}
+                            value={feedbackSourceUrl}
+                            onChange={(e) => setFeedbackSourceUrl(e.target.value)}
+                            className="w-full rounded-lg border border-border bg-surface px-2 py-1.5 text-fg text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary"
+                          />
+                          <p className="text-[11px] leading-snug text-muted">
+                            {t("chat.medicalSourceHint")}
+                          </p>
+                        </div>
+                      ) : null}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span>{t("chat.wasHelpful")}</span>
+                        <button
+                          type="button"
+                          onClick={() => void submitReplyFeedback(1)}
+                          className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                          aria-label="Thumbs up"
+                        >
+                          👍
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void submitReplyFeedback(-1)}
+                          className="rounded-full border border-border px-2 py-1 hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
+                          aria-label="Thumbs down"
+                        >
+                          👎
+                        </button>
+                      </div>
                     </div>
                   )}
                 </>

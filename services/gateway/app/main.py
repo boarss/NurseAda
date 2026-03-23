@@ -10,6 +10,7 @@ from app.routers import (
     health,
     chat,
     feedback,
+    medical_feedback,
     herbal,
     medications,
     appointments,
@@ -33,6 +34,11 @@ app.add_middleware(
 app.include_router(health.router, prefix="/health", tags=["health"])
 app.include_router(chat.router, prefix="/chat", tags=["chat"])
 app.include_router(feedback.router, prefix="/feedback", tags=["feedback"])
+app.include_router(
+    medical_feedback.router,
+    prefix="/feedback/medical-source",
+    tags=["feedback"],
+)
 app.include_router(herbal.router, prefix="/herbal", tags=["herbal"])
 app.include_router(medications.router, prefix="/medications", tags=["medications"])
 app.include_router(appointments.router, prefix="/appointments", tags=["appointments"])

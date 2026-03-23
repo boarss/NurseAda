@@ -40,3 +40,28 @@ SUPABASE_URL = _str("SUPABASE_URL")
 SUPABASE_ANON_KEY = _str("SUPABASE_ANON_KEY")
 SUPABASE_JWT_SECRET = _str("SUPABASE_JWT_SECRET")
 SUPABASE_SERVICE_ROLE_KEY = _str("SUPABASE_SERVICE_ROLE_KEY")
+
+# Cloudflare Browser Rendering /crawl (optional) — medical source capture for signed-in feedback
+CLOUDFLARE_ACCOUNT_ID = _str("CLOUDFLARE_ACCOUNT_ID")
+CLOUDFLARE_API_TOKEN = _str("CLOUDFLARE_API_TOKEN")
+
+# Comma-separated HTTPS URL prefixes; when unset, defaults to major public-health domains
+_DEFAULT_MEDICAL_CRAWL_PREFIXES = (
+    "https://www.who.int/",
+    "https://www.cdc.gov/",
+    "https://www.nhs.uk/",
+    "https://www.nice.org.uk/",
+    "https://pubmed.ncbi.nlm.nih.gov/",
+)
+
+
+def medical_crawl_allowlist_prefixes() -> list[str]:
+    raw = os.getenv("CLOUDFLARE_CRAWL_ALLOWLIST_PREFIXES")
+    if raw is None:
+        return list(_DEFAULT_MEDICAL_CRAWL_PREFIXES)
+    parsed = [p.strip() for p in raw.split(",") if p.strip()]
+    return parsed
+
+
+def cloudflare_crawl_configured() -> bool:
+    return bool(CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN)
