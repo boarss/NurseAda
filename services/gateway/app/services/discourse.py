@@ -272,6 +272,15 @@ def format_triage_response(
 ) -> str:
     """Build a practitioner-like triage response."""
     lines = [t("triage_opening", locale), ""]
+    if severity == "emergency":
+        lines.append(t("emergency_ack", locale))
+    elif severity == "high":
+        lines.append(t("urgent_ack", locale))
+    elif severity == "medium":
+        lines.append(t("urgent_ack", locale))
+    elif severity == "low":
+        lines.append(t("routine_ack", locale))
+    lines.append("")
     lines.append(t("severity_line", locale, severity=severity))
     if confidence is not None:
         lines.append(t("confidence_line", locale, pct=str(int(confidence * 100))))

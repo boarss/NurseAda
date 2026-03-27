@@ -43,6 +43,71 @@ DEFAULT_CODE = {"system": "ICD-10", "code": "R69", "display": "Unknown cause"}
 DEFAULT_SUGGESTION = "I'd recommend sharing your symptoms with a healthcare provider for a proper assessment. This is not a diagnosis."
 
 
+def _supplement_suggestions_for_codes(
+    inferred_codes: list[dict],
+    suggestions: list[str],
+) -> list[str]:
+    """
+    Extra primary-care bullets aligned with CDSS recommendation_engine
+    (gateway cannot import cdss; keep strings in sync when editing either file).
+    """
+    displays = {
+        str(c.get("display", "")).lower()
+        for c in inferred_codes
+        if isinstance(c, dict)
+    }
+    extras: list[str] = []
+    if any("ketone" in d or "dka" in d for d in displays):
+        extras.append(
+            "Check blood sugar and ketones. If ketones are moderate or large, seek urgent care immediately."
+        )
+    if any("diabetes" in d and "illness" in d for d in displays):
+        extras.append(
+            "With diabetes and illness, monitor glucose more often and follow your sick-day plan; seek care if you cannot eat or drink normally."
+        )
+    if any("fever" in d for d in displays):
+        extras.append(
+            "Use fluids and rest; seek care if fever is high or lasts more than 3 days."
+        )
+    if any("headache" in d for d in displays):
+        extras.append(
+            "Rest in a quiet place and stay hydrated; seek urgent care for sudden or severe headache."
+        )
+    if any("cough" in d for d in displays):
+        extras.append(
+            "Rest and fluids; seek care if breathing becomes difficult or cough lasts more than two weeks."
+        )
+    if any("diarrhea" in d for d in displays):
+        extras.append(
+            "Use oral rehydration or fluids; seek care if diarrhea is severe, bloody, or you cannot keep fluids down."
+        )
+    if any("pain" in d for d in displays) and not any("headache" in d for d in displays):
+        extras.append(
+            "Note where and how long the pain lasts; seek care if pain is severe, spreading, or getting worse."
+        )
+    if any("bleeding" in d for d in displays):
+        extras.append(
+            "Bleeding symptoms need prompt in-person assessment; do not delay seeking care."
+        )
+    if any("respiratory" in d or "cardiac" in d for d in displays):
+        extras.append(
+            "If breathing difficulty or chest discomfort worsens, seek emergency care without waiting."
+        )
+    if any("tired" in d or "tiredness" in d for d in displays):
+        extras.append(
+            "Prioritise rest and hydration; see a provider if fatigue is severe or lasts weeks without improvement."
+        )
+
+    seen = {s.strip().lower() for s in suggestions}
+    out = list(suggestions)
+    for e in extras:
+        key = e.strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            out.append(e)
+    return out
+
+
 def run_fallback_triage(query: str) -> FallbackTriageResult:
     """Run triage when CDSS is unavailable. Returns severity, suggestions, and reasoning."""
     text = (query or "").strip().lower()
@@ -90,6 +155,8 @@ def run_fallback_triage(query: str) -> FallbackTriageResult:
         matched_codes = [DEFAULT_CODE]
         if not reasoning_parts:
             reasoning_parts = ["I'm giving general guidance based on what you shared."]
+
+    matched_suggestions = _supplement_suggestions_for_codes(matched_codes, matched_suggestions)
 
     confidence = 0.7 if matched_codes and matched_codes[0] != DEFAULT_CODE else 0.4
     if matched_severity == "emergency":

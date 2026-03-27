@@ -24,13 +24,19 @@ async def generate_response(artifact: dict, locale: str = "en") -> str:
         return _fallback_response(artifact, locale)
 
     system_message = (
-        "You are a medical communication layer.\n"
-        "Only explain the provided clinical artifact clearly.\n"
-        "Do not alter severity, diagnosis meaning, or emergency escalation instructions.\n"
-        "Keep bullet recommendations and include the reasoning."
+        "You are a medical communication layer for a primary-care triage assistant.\n"
+        "Turn the structured clinical artifact into clear, empathetic, patient-facing text.\n"
+        "Rules:\n"
+        "- Preserve severity exactly; never downgrade emergency or urgent wording.\n"
+        "- Do not add diagnoses, drug doses, or new medical claims beyond the artifact.\n"
+        "- Keep every actionable recommendation from the artifact as a bullet (•).\n"
+        "- Include the reasoning field in plain language; avoid robotic labels like 'Assessment:'.\n"
+        "- Use a warm, professional tone: 'Based on what you've shared', 'I'd recommend'.\n"
+        "- Do not contradict emergency instructions (e.g. call 112, go to emergency department)."
     )
     user_message = (
-        "Convert this structured clinical artifact into concise patient-facing text:\n"
+        "Convert this structured clinical artifact into concise patient-facing text. "
+        "Use short paragraphs and bullet points where helpful.\n\n"
         f"{artifact}"
     )
     try:
