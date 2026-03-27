@@ -2,7 +2,7 @@
   "meta": {
     "appName": "NurseAda",
     "title": "NurseAda – Your 24/7 Health Assistant",
-    "description": "AI-powered primary care support for Nigeria and Africa. Symptoms, medications, and health guidance in your language."
+    "description": "For patients in Nigeria and Africa: AI primary care—symptom triage and guidance in your language. Core chat works without a hospital account."
   },
   "common": {
     "signIn": "Sign in",
@@ -38,8 +38,8 @@
     "copyFailed": "Copy failed"
   },
   "home": {
-    "tagline": "Primary care, your way",
-    "subtitle": "Your 24/7 AI health assistant for Nigeria and Africa. Symptom guidance, medications, and support in English and local languages.",
+    "tagline": "Primary care for patients, your way",
+    "subtitle": "Your 24/7 AI assistant for symptom triage and next steps. No hospital login needed for core chat. Nigeria and Africa; English and local languages.",
     "startChat": "Start chat",
     "medications": "Medications",
     "appointments": "Appointments"
@@ -65,7 +65,8 @@
     "medications": "Medications",
     "appointments": "Appointments",
     "yourPatientId": "Your Patient ID",
-    "emptyState": "Describe your symptoms, ask about medications, or get general health guidance. In an emergency, call 112 or seek care immediately.",
+    "emptyState": "Describe your symptoms, ask about medications, or get general health guidance. NurseAda uses what you share in this chat—no hospital account needed. In an emergency, call 112 or seek care immediately.",
+    "independentHint": "No Patient ID entered—advice is general and not pulled from linked records.",
     "tryThese": "Try one of these:",
     "placeholder": "Describe your symptoms or ask a health question...",
     "imageAttached": "Image attached",
@@ -79,7 +80,7 @@
     "feedbackWithSourceThanks": "Thanks — feedback and source saved.",
     "serverError": "I couldn't reach the server. Check that the gateway is running and the URL in .env.local is correct.",
     "thinking": "NurseAda is thinking...",
-    "guestMode": "Guest mode — sign in for patient data access",
+    "guestMode": "Guest mode — chat works from what you describe. Sign in for your account and optional patient features.",
     "promptHeadache": "I have a headache",
     "promptFever": "I feel feverish and tired",
     "promptDrugCombo": "Can I take paracetamol with ibuprofen?",

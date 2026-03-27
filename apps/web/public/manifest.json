@@ -1,7 +1,7 @@
 {
   "name": "NurseAda – Your 24/7 Health Assistant",
   "short_name": "NurseAda",
-  "description": "AI-powered primary care support for Nigeria and Africa.",
+  "description": "For patients in Nigeria and Africa: AI primary care and symptom triage. Core chat works without a hospital account.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#faf8f5",

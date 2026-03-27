@@ -2,7 +2,7 @@
   "meta": {
     "appName": "NurseAda",
     "title": "NurseAda – Mai Taimakon Lafiya 24/7",
-    "description": "Taimakon lafiya na AI don Najeriya da Afirka. Binciken alamomi, magunguna, da jagorar lafiya cikin harshensa."
+    "description": "Ga marasa lafiya a Najeriya da Afirka: kulawa ta farko ta AI—binciken alamomi da jagorar lafiya cikin harshensa. Hira ta asali tana aiki ba tare da asusun asibiti ba."
   },
   "common": {
     "signIn": "Shiga",
@@ -38,8 +38,8 @@
     "copyFailed": "Ba a iya kwafa ba"
   },
   "home": {
-    "tagline": "Kula da lafiya, yadda kake so",
-    "subtitle": "Mai taimakon lafiya na AI 24/7 don Najeriya da Afirka. Binciken alamomi, magunguna, da tallafi cikin harshenka.",
+    "tagline": "Kula da lafiyar marasa lafiya, yadda kake so",
+    "subtitle": "Mai taimakon lafiya na AI 24/7 don binciken alamomi da mataki na gaba. Ba ka buƙatar shiga asibiti don hira ta asali. Najeriya da Afirka; Hausa da sauran harsuna.",
     "startChat": "Fara hira",
     "medications": "Magunguna",
     "appointments": "Alƙawari"
@@ -65,7 +65,8 @@
     "medications": "Magunguna",
     "appointments": "Alƙawari",
     "yourPatientId": "Lambar majinyacinka",
-    "emptyState": "Bayyana alamomin rashin lafiyarka, tambaya game da magunguna, ko nemi jagorar lafiya. Idan gaggawa ce, kira 112 ko je asibiti nan take.",
+    "emptyState": "Bayyana alamomin rashin lafiyarka, tambaya game da magunguna, ko nemi jagorar lafiya. NurseAda yana amfani da abin da kuka faɗa a nan—ba buƙatar asusun asibiti ba. Idan gaggawa ce, kira 112 ko je asibiti nan take.",
+    "independentHint": "Ba a shigar da ID na majinyaci ba—shawarar gaba ɗaya ce, ba daga bayanan da aka haɗa ba.",
     "tryThese": "Gwada waɗannan:",
     "placeholder": "Bayyana alamominka ko yi tambayar lafiya...",
     "imageAttached": "An haɗa hoto",
@@ -79,7 +80,7 @@
     "feedbackWithSourceThanks": "Thanks — feedback and source saved.",
     "serverError": "Ban iya isa ga server ba. Ka tabbatar cewa gateway yana aiki kuma URL a cikin .env.local daidai ne.",
     "thinking": "NurseAda tana tunani...",
-    "guestMode": "Yanayin baƙo — shiga don ganin bayanan majinyaci",
+    "guestMode": "Yanayin baƙo — hira tana aiki da abin da kuka bayyana. Shiga don asusu da fasali na zaɓi na majinyaci.",
     "promptHeadache": "Kaina yana ciwona",
     "promptFever": "Ina da zazzaɓi kuma ina jin gajiya",
     "promptDrugCombo": "Zan iya shan paracetamol da ibuprofen tare?",

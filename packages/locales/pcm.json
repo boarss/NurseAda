@@ -2,7 +2,7 @@
   "meta": {
     "appName": "NurseAda",
     "title": "NurseAda – Ya 24/7 Health Helper",
-    "description": "AI health support for Nigeria and Africa. Symptom check, medicine, and health talk for your language."
+    "description": "For patients for Nigeria and Africa: AI primary care—symptom check and guidance for your language. Main chat dey work without hospital account."
   },
   "common": {
     "signIn": "Log in",
@@ -38,8 +38,8 @@
     "copyFailed": "Copy no work"
   },
   "home": {
-    "tagline": "Healthcare, your own way",
-    "subtitle": "Ya 24/7 AI health helper for Nigeria and Africa. Check symptoms, find medicine, and get support for your language.",
+    "tagline": "Primary care for patients, your own way",
+    "subtitle": "Ya 24/7 AI health helper for symptom check and wetin to do next. You no need hospital login for main chat. Nigeria and Africa; English and local languages.",
     "startChat": "Start to yarn",
     "medications": "Medicine",
     "appointments": "Appointment"
@@ -65,7 +65,8 @@
     "medications": "Medicine",
     "appointments": "Appointment",
     "yourPatientId": "Your Patient ID",
-    "emptyState": "Tell me how you dey feel, ask about medicine, or get health advice. If e be emergency, call 112 or go hospital sharp sharp.",
+    "emptyState": "Tell me how you dey feel, ask about medicine, or get health advice. NurseAda dey use wetin you yarn for here—no need hospital account. If e be emergency, call 112 or go hospital sharp sharp.",
+    "independentHint": "You never put Patient ID—na general advice, no be from linked records.",
     "tryThese": "You fit try these:",
     "placeholder": "Tell me how you dey feel or ask health question...",
     "imageAttached": "Picture don attach",
@@ -79,7 +80,7 @@
     "feedbackWithSourceThanks": "Thank you — we don save your feedback and the source.",
     "serverError": "I no fit reach the server. Check say the gateway dey run and the URL for .env.local correct.",
     "thinking": "NurseAda dey think...",
-    "guestMode": "Guest mode — log in to see patient data",
+    "guestMode": "Guest mode — chat dey work from wetin you describe. Log in for account and optional patient features.",
     "promptHeadache": "My head dey pain me",
     "promptFever": "I get fever and I dey tired",
     "promptDrugCombo": "I fit take paracetamol with ibuprofen?",

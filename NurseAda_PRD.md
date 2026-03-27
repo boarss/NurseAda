@@ -26,6 +26,14 @@ User2: As a user, If I feel a sscertain way, I would like a chatbot that can mak
 User3: As a user, I need herbal recommendations for certain illnesses that do not require me taking drugs. Just a few herbs that can cure my ailment.
 
 User4: As a user, I would like a chatbot that is not only professioanl-like medical practitioners but converasational, something that makes me feel safe and well-taken caref of. 
+
+## 1.2 Ideal customer profile
+
+- **Who**: Individual **patients** in Nigeria and Africa as the primary users; urban and underserved settings; access and cost constraints as in §1.
+- **Core job**: Primary-care-style **symptom triage** and next-step guidance **without** requiring a hospital account or EHR for basic chat (see §2.4a Independent Primary Care Network Mode).
+- **Add-ons**: Herbal, medications, appointments, imaging—optional on top of triage.
+- **Canonical reference**: [docs/product/IDEAL_CUSTOMER_PROFILE.md](docs/product/IDEAL_CUSTOMER_PROFILE.md).
+
 ---
 
 ## 2. Technical Implementation

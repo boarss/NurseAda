@@ -25,7 +25,7 @@ The following project-level subagents live in `.cursor/agents/` and are designed
 
 - **`ai-medical-practitioner`**: Overall medical practitioner for agents, triage, imaging, FHIR integration, and DKA/ketone handling.
 - **`ai-engineer-healthcare`**: Guardrails and orchestration specialist for preprocessing, postprocessing, severity routing, and safety.
-- **`product-manager`**: Ensures features match the PRD, are clinically safe, and serve NurseAda’s target users.
+- **`product-manager`**: Ensures features match the PRD, are clinically safe, and serve NurseAda’s target users. **Ideal customer profile:** [docs/product/IDEAL_CUSTOMER_PROFILE.md](docs/product/IDEAL_CUSTOMER_PROFILE.md).
 
 ### Role-based clinical and psychosocial agents
 

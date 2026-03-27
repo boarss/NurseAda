@@ -32,7 +32,7 @@ type UIMessage = {
 
 export default function ChatScreen() {
   const { t, i18n } = useTranslation();
-  const { accessToken, user } = useAuth();
+  const { user, patientCode, getValidAccessToken } = useAuth();
 
   const suggestedPrompts = [
     t("chat.promptHeadache"),
@@ -54,17 +54,24 @@ export default function ChatScreen() {
 
   useEffect(() => {
     const id = patientId.trim();
-    if (!id || !accessToken) {
+    if (!id || !user) {
       setPatientSummary(null);
       return;
     }
     const timeout = setTimeout(() => {
-      getPatient(id, accessToken)
-        .then(setPatientSummary)
-        .catch(() => setPatientSummary(null));
+      void (async () => {
+        const token = await getValidAccessToken();
+        if (!token) {
+          setPatientSummary(null);
+          return;
+        }
+        getPatient(id, token)
+          .then(setPatientSummary)
+          .catch(() => setPatientSummary(null));
+      })();
     }, 500);
     return () => clearTimeout(timeout);
-  }, [patientId, accessToken]);
+  }, [patientId, user, getValidAccessToken]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -157,13 +164,21 @@ export default function ChatScreen() {
     setLoading(true);
     void hapticNudge();
     try {
+      const token = await getValidAccessToken();
+      if (!token) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", text: t("chat.serverError") },
+        ]);
+        return;
+      }
       const history: ChatMessage[] = messages.map((m) => ({
         role: m.role,
         content: m.text,
       }));
       history.push({ role: "user", content: text });
       const { reply } = await sendChatMessage(history, {
-        token: accessToken,
+        token,
         imageBase64: currentB64 || undefined,
         patientId: patientId.trim() || undefined,
         locale: i18n.language,
@@ -189,29 +204,46 @@ export default function ChatScreen() {
       keyboardVerticalOffset={90}
     >
       {user ? (
-        <View style={styles.patientRow}>
-          <TextInput
-            style={styles.patientInput}
-            value={patientId}
-            onChangeText={setPatientId}
-            placeholder={t("chat.patientId")}
-            placeholderTextColor={colors.muted}
-            autoCapitalize="none"
-          />
-          <LanguagePicker />
-          {patientId.trim() !== "" && (
-            <Pressable
-              onPress={() =>
-                router.push({
-                  pathname: "/patient",
-                  params: { id: patientId.trim() },
-                })
-              }
-            >
-              <Text style={styles.profileLink}>{t("common.profile")}</Text>
-            </Pressable>
-          )}
-        </View>
+        <>
+          {patientCode ? (
+            <View style={styles.nurseAdaIdRow}>
+              <Text style={styles.nurseAdaIdLabel}>
+                {t("chat.yourPatientId")}:{" "}
+              </Text>
+              <Text style={styles.nurseAdaIdValue}>{patientCode}</Text>
+            </View>
+          ) : null}
+          <View style={styles.patientRow}>
+            <TextInput
+              style={styles.patientInput}
+              value={patientId}
+              onChangeText={setPatientId}
+              placeholder={t("chat.patientId")}
+              placeholderTextColor={colors.muted}
+              autoCapitalize="none"
+            />
+            <LanguagePicker />
+            {patientId.trim() !== "" && (
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/patient",
+                    params: { id: patientId.trim() },
+                  })
+                }
+              >
+                <Text style={styles.profileLink}>{t("common.profile")}</Text>
+              </Pressable>
+            )}
+          </View>
+          {patientId.trim() === "" ? (
+            <View style={styles.independentHintRow}>
+              <Text style={styles.independentHintText}>
+                {t("chat.independentHint")}
+              </Text>
+            </View>
+          ) : null}
+        </>
       ) : (
         <View style={styles.guestBanner}>
           <Text style={styles.guestText}>
@@ -343,6 +375,19 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: colors.bg },
   buttonPressed: { opacity: 0.85 },
+  nurseAdaIdRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: "#ecfdf5",
+    gap: 4,
+  },
+  nurseAdaIdLabel: { fontSize: 12, color: colors.muted },
+  nurseAdaIdValue: { fontSize: 13, color: colors.fg, fontWeight: "700" },
   patientRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -364,6 +409,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   profileLink: { fontSize: 13, color: colors.primary, fontWeight: "600" },
+  independentHintRow: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  independentHintText: { fontSize: 11, color: colors.muted, lineHeight: 16 },
   summaryBanner: {
     flexDirection: "row",
     alignItems: "center",

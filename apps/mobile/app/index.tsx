@@ -11,7 +11,7 @@ const { colors, spacing, radius } = theme;
 
 export default function HomeScreen() {
   const { t } = useTranslation();
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, patientCode } = useAuth();
   const fade = useRef(new Animated.Value(0)).current;
   const slide = useRef(new Animated.Value(12)).current;
 
@@ -66,9 +66,16 @@ export default function HomeScreen() {
         <View style={styles.authRow}>
           {user ? (
             <>
-              <Text style={styles.authEmail} numberOfLines={1}>
-                {user.email}
-              </Text>
+              <View style={styles.authUserCol}>
+                <Text style={styles.authEmail} numberOfLines={1}>
+                  {user.email}
+                </Text>
+                {patientCode ? (
+                  <Text style={styles.patientCodeText} numberOfLines={1}>
+                    {t("chat.yourPatientId")}: {patientCode}
+                  </Text>
+                ) : null}
+              </View>
               <Pressable onPress={() => void signOut()}>
                 <Text style={styles.authLink}>{t("common.signOut")}</Text>
               </Pressable>
@@ -131,6 +138,8 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.85,
   },
+  authUserCol: { alignItems: "center", maxWidth: 200 },
+  patientCodeText: { fontSize: 11, color: colors.primary, fontWeight: "600", marginTop: 2 },
   authRow: {
     flexDirection: "row",
     alignItems: "center",

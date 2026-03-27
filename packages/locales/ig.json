@@ -2,7 +2,7 @@
   "meta": {
     "appName": "NurseAda",
     "title": "NurseAda – Onye Enyemaka Ahụ Ike Gị 24/7",
-    "description": "Enyemaka ahụ ike AI maka Naịjirịa na Áfríkà. Nyochaa mgbaàmà, ọgwụ, na nduzi ahụ ike n'asụsụ gị."
+    "description": "Maka ndị ọrịa na Naịjirịa na Áfríkà: AI na-elekọta ahụ ike mbụ—nyocha mgbaàmà na nduzi n'asụsụ gị. Nkwurịta ntụala na-arụ ọrụ na-enweghị akaụntụ ụlọ ọgwụ."
   },
   "common": {
     "signIn": "Banye",
@@ -38,8 +38,8 @@
     "copyFailed": "Enweghị ike ịkó pịa"
   },
   "home": {
-    "tagline": "Nlekọta ahụ ike, n'ụzọ gị",
-    "subtitle": "Onye enyemaka ahụ ike AI gị 24/7 maka Naịjirịa na Áfríkà. Nyochaa mgbaàmà, ọgwụ, na nkwado n'asụsụ gị.",
+    "tagline": "Nlekọta ahụ ike maka ndị ọrịa, n'ụzọ gị",
+    "subtitle": "Onye enyemaka AI gị 24/7 maka nyocha mgbaàmà na nzọụkwụ ọzọ. Ị chọghị nbanye ụlọ ọgwụ maka nkwurịta ntụala. Naịjirịa na Áfríkà; Igbo na asụsụ ndị ọzọ.",
     "startChat": "Malite nkwurịta ọnụ",
     "medications": "Ọgwụ",
     "appointments": "Nkwekọrịta"
@@ -65,7 +65,8 @@
     "medications": "Ọgwụ",
     "appointments": "Nkwekọrịta",
     "yourPatientId": "Nọmbà onye ọrịa gị",
-    "emptyState": "Kọwaa otu i si enwe ahụ, jụọ maka ọgwụ, ma ọ bụ nweta nduzi ahụ ike. Ọ bụrụ mberede, kpọọ 112 ma ọ bụ gaa ụlọ ọgwụ ozugbo.",
+    "emptyState": "Kọwaa otu i si enwe ahụ, jụọ maka ọgwụ, ma ọ bụ nweta nduzi ahụ ike. NurseAda na-eji ihe ị kwuru ebe a—achọghị akaụntụ ụlọ ọgwụ. Ọ bụrụ mberede, kpọọ 112 ma ọ bụ gaa ụlọ ọgwụ ozugbo.",
+    "independentHint": "Enweghị Patient ID — ndụmọdụ bụ nkọwa zuru ezu, na-abụghị site na ndekọ ejikọtara.",
     "tryThese": "Nwaa ndị a:",
     "placeholder": "Kọwaa mgbaàmà gị ma ọ bụ jụọ ajụjụ ahụ ike...",
     "imageAttached": "Ejikọtara foto",
@@ -79,7 +80,7 @@
     "feedbackWithSourceThanks": "Thanks — feedback and source saved.",
     "serverError": "Enweghị m ike iru server. Lezie anya na gateway na-arụ ọrụ na URL dị na .env.local ziri ezi.",
     "thinking": "NurseAda na-eche echiche...",
-    "guestMode": "Ọnọdụ ọbịa — banye iji hụ data onye ọrịa",
+    "guestMode": "Ọnọdụ ọbịa — nkwa kwụsịrị site na ihe ị kọwara. Banye maka akaụntụ gị na nhọrọ na-optional maka onye ọrịa.",
     "promptHeadache": "Isi na-awa m",
     "promptFever": "Ahụ na-ekpo m ọkụ, anụ ahụ na-agwụ m ike",
     "promptDrugCombo": "Enwere m ike ịṅụ paracetamol na ibuprofen ọnụ?",

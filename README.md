@@ -4,6 +4,8 @@
 
 See [NurseAda_PRD.md](./NurseAda_PRD.md) for full product requirements, architecture, and success metrics.
 
+**Ideal customer profile (ICP):** [docs/product/IDEAL_CUSTOMER_PROFILE.md](./docs/product/IDEAL_CUSTOMER_PROFILE.md) — who we serve, jobs to be done, and non-goals (Product-owned).
+
 ## Repository structure
 
 | Path | Purpose |

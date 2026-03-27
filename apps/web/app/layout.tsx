@@ -29,7 +29,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "NurseAda – Your 24/7 Health Assistant",
   description:
-    "AI-powered primary care support for Nigeria and Africa. Symptoms, medications, and health guidance in your language.",
+    "For patients in Nigeria and Africa: AI primary care—symptom triage and guidance in your language. Core chat works without a hospital account.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

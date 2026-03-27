@@ -2,7 +2,7 @@
   "meta": {
     "appName": "NurseAda",
     "title": "NurseAda – Olùrànlọ́wọ́ Ìlera Rẹ 24/7",
-    "description": "Ìrànlọ́wọ́ ìlera AI fún Nàìjíríà àti Áfríkà. Àyẹ̀wò àmì àrùn, oògùn, àti ìtọ́sọ́nà ìlera ní èdè rẹ."
+    "description": "Fún oníṣe àrùn ní Nàìjíríà àti Áfríkà: ìtọ́jú ìlera àkọ́kọ́ AI—àyẹ̀wò àmì àrùn àti ìtọ́sọ́nà ní èdè rẹ. Ìjíròrò ìpínlẹ̀ ń ṣiṣẹ́ láìní àkọọ́lẹ̀ ilé ìwòsàn."
   },
   "common": {
     "signIn": "Wọlé",
@@ -38,8 +38,8 @@
     "copyFailed": "Kò lè ṣe ẹ̀dà"
   },
   "home": {
-    "tagline": "Ìtọ́jú ìlera, ní ọ̀nà tìrẹ",
-    "subtitle": "Olùrànlọ́wọ́ ìlera AI rẹ 24/7 fún Nàìjíríà àti Áfríkà. Àyẹ̀wò àmì àrùn, oògùn, àti àtìlẹ́yìn ní èdè rẹ.",
+    "tagline": "Ìtọ́jú ìlera fún oníṣe àrùn, ní ọ̀nà tìrẹ",
+    "subtitle": "Olùrànlọ́wọ́ AI rẹ 24/7 fún àyẹ̀wò àmì àrùn àti ìgbésẹ̀ tó kàn. O kò nílò ìwọlé ilé ìwòsàn fún ìjíròrò ìpínlẹ̀. Nàìjíríà àti Áfríkà; Yorùbá àti àwọn èdè mìíràn.",
     "startChat": "Bẹ̀rẹ̀ ìjíròrò",
     "medications": "Oògùn",
     "appointments": "Ìpàdé"
@@ -65,7 +65,8 @@
     "medications": "Oògùn",
     "appointments": "Ìpàdé",
     "yourPatientId": "Nọ́mbà aláìsàn rẹ",
-    "emptyState": "Ṣàpèjúwe bí o ṣe ń rí, bèèrè nípa oògùn, tàbí gba ìtọ́sọ́nà ìlera. Tí ó bá jẹ́ pàjáwìrì, pe 112 tàbí lọ sí ilé ìwòsàn lẹ́sẹ̀kẹsẹ̀.",
+    "emptyState": "Ṣàpèjúwe bí o ṣe ń rí, bèèrè nípa oògùn, tàbí gba ìtọ́sọ́nà ìlera. NurseAda lo ohun tí o sọ níbí—kò nílò àkọọ́lẹ̀ ilé ìwòsàn. Tí ó bá jẹ́ pàjáwìrì, pe 112 tàbí lọ sí ilé ìwòsàn lẹ́sẹ̀kẹsẹ̀.",
+    "independentHint": "Ko sí ìdánimọ̀ aláìsàn—ìmọ̀ràn ni gbogbogbo, kì í ṣe láti àwọn àkọọ́lẹ̀ tí a so pọ̀.",
     "tryThese": "Gbìyànjú àwọn wọ̀nyí:",
     "placeholder": "Ṣàpèjúwe àmì àrùn rẹ tàbí béèrè ìbéèrè ìlera...",
     "imageAttached": "A ti so àwòrán pọ̀",
@@ -79,7 +80,7 @@
     "feedbackWithSourceThanks": "Thanks — feedback and source saved.",
     "serverError": "Mi ò lè bá server sọ̀rọ̀. Ṣàyẹ̀wò pé gateway ń ṣiṣẹ́ àti pé URL nínú .env.local tọ́.",
     "thinking": "NurseAda ń ronú...",
-    "guestMode": "Ìpò àlejò — wọlé láti rí dátà aláìsàn",
+    "guestMode": "Ìpò àlejò — ìjíròrò ń ṣiṣẹ́ láti ohun tí o sọ. Wọlé fún àkọọ́lẹ̀ rẹ àti àwọn ohun àfikún fún aláìsàn.",
     "promptHeadache": "Orí mi ń dùn mi",
     "promptFever": "Mo ní ibà, mo sì rẹ̀",
     "promptDrugCombo": "Ṣé mo lè mu paracetamol àti ibuprofen papọ̀?",

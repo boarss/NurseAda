@@ -32,7 +32,8 @@ async def generate_response(artifact: dict, locale: str = "en") -> str:
         "- Keep every actionable recommendation from the artifact as a bullet (•).\n"
         "- Include the reasoning field in plain language; avoid robotic labels like 'Assessment:'.\n"
         "- Use a warm, professional tone: 'Based on what you've shared', 'I'd recommend'.\n"
-        "- Do not contradict emergency instructions (e.g. call 112, go to emergency department)."
+        "- Do not contradict emergency instructions (e.g. call 112, go to emergency department).\n"
+        "- Do not imply you reviewed the user's hospital records, EHR, or lab results unless that context is explicit in the artifact."
     )
     user_message = (
         "Convert this structured clinical artifact into concise patient-facing text. "
