@@ -18,7 +18,7 @@ export function AppLogo({ variant = "default", className = "" }: AppLogoProps) {
       className={`inline-flex shrink-0 items-center rounded-card transition-opacity duration-fast ease-out-expo hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg ${className}`}
     >
       <Image
-        src="Nurseada logo asset.svg"
+        src="/brand/nurseada-logo-asset.svg"
         width={size}
         height={size}
         alt={t("meta.logoAlt")}
