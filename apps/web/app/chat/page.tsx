@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { sendChatMessage, sendFeedback, sendMedicalFeedbackWithSource } from "@/lib/api";
 import { useAuth } from "@/lib/AuthContext";
 import { useLocale } from "@/lib/IntlProvider";
+import { AppLogo } from "@/components/AppLogo";
 import { LanguagePicker } from "@/components/LanguagePicker";
 
 function MessageContent({ text }: { text: string }) {
@@ -208,13 +209,7 @@ export default function ChatPage() {
   return (
     <main className="min-h-screen flex flex-col max-w-2xl mx-auto w-full">
       <header className="sticky top-0 z-10 flex flex-wrap items-center gap-2 sm:gap-4 px-4 py-3 bg-bg/90 backdrop-blur-md border-b border-border">
-        <Link
-          href="/"
-          className="rounded-lg p-2 -ml-2 text-muted hover:text-fg hover:bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg"
-          aria-label={t("common.backToHome")}
-        >
-          <span className="font-body font-medium">&larr;</span>
-        </Link>
+        <AppLogo variant="compact" className="-ml-1" />
         <h1 className="font-display text-xl font-semibold text-fg">
           {t("chat.title")}
         </h1>

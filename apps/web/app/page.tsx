@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { AppLogo } from "@/components/AppLogo";
 import { LanguagePicker } from "@/components/LanguagePicker";
 import { useAuth } from "@/lib/AuthContext";
 import { PageShell } from "@/components/PageShell";
@@ -12,7 +13,14 @@ export default function HomePage() {
 
   return (
     <PageShell className="flex min-h-screen flex-col gap-6">
-      <nav className="flex items-center justify-end gap-3 py-3 opacity-0 animate-in animate-in-delay-1">
+      <nav className="flex items-center justify-between gap-3 py-3 opacity-0 animate-in animate-in-delay-1">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <AppLogo />
+          <span className="font-display hidden text-lg font-semibold tracking-tight text-fg sm:inline">
+            {t("meta.appName")}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
         <LanguagePicker />
         {!loading && (
           <>
@@ -53,6 +61,7 @@ export default function HomePage() {
             )}
           </>
         )}
+        </div>
       </nav>
 
       <div className="flex flex-1 flex-col justify-center">

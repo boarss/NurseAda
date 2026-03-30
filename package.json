@@ -16,6 +16,8 @@
     "lint": "npm run lint --workspaces --if-present",
     "test:backend": "pytest services/cdss/tests -q && cd services/gateway && pytest tests -q && cd ../fhir-adapter && pytest tests -q",
     "test:web": "npm test --workspace=apps/web",
+    "test:mobile": "npm test --workspace=nurseada-mobile",
+    "test:mobile:integration": "npm run test:integration --workspace=nurseada-mobile",
     "test:e2e": "npx playwright test"
   },
   "engines": {

@@ -9,7 +9,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
     "test": "vitest",
-    "test:integration": "vitest run test/integration"
+    "test:integration": "vitest run test/integration",
+    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.0",
@@ -34,6 +35,7 @@
     "@testing-library/react": "^14.2.0",
     "@testing-library/user-event": "^14.5.0",
     "@testing-library/jest-dom": "^6.6.3",
-    "jsdom": "^24.0.0"
+    "jsdom": "^24.0.0",
+    "sharp": "^0.33.5"
   }
 }

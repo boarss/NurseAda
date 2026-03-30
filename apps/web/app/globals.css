@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root {
-  /* Warm, human palette – light */
+  /* Warm, human palette – light; primary aligned to brand mark (teal) */
   --bg: #faf8f5;
   --fg: #1c1917;
   --muted: #57534e;
   --surface: #ffffff;
   --border: #e7e5e4;
-  --primary: #0d5c4a;
-  --primary-hover: #0a4a3b;
+  --primary: #0f766e;
+  --primary-hover: #0d9488;
   --accent: #c2410c;
   --accent-muted: #ea580c;
-  --bubble-user: #0d5c4a;
+  --bubble-user: #0f766e;
   --bubble-assistant: #e7e5e4;
   --error: #b91c1c;
   --radius: 1rem;
-  --shadow: 0 4px 24px rgba(13, 92, 74, 0.08);
+  --shadow: 0 4px 24px rgba(15, 118, 110, 0.08);
   --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   /* Motion tokens */
   --duration-fast: 150ms;

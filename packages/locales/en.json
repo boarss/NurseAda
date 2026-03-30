@@ -1,6 +1,7 @@
 {
   "meta": {
     "appName": "NurseAda",
+    "logoAlt": "NurseAda logo",
     "title": "NurseAda – Your 24/7 Health Assistant",
     "description": "For patients in Nigeria and Africa: AI primary care—symptom triage and guidance in your language. Core chat works without a hospital account."
   },
